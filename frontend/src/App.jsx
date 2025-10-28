@@ -1,13 +1,13 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import GroupsList from "./pages/GroupList";
-import GroupDetail from "./pages/GroupDetail";
+import Form from "../pages/Form";
+
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<GroupsList />} />
-        <Route path="/group/:id" element={<GroupDetail />} />
+        <Route path="/" element={<Form />} />
+        <Route path="/form" element={<Form />} />
       </Routes>
     </BrowserRouter>
   );
