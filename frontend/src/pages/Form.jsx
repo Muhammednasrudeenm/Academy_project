@@ -1,231 +1,280 @@
-
 import React, { useState, useEffect } from "react";
+import { ArrowLeft } from "lucide-react";
 
 export default function Form() {
-    const categories = ["Football", "Cricket", "Basketball", "Tennis", "Swimming", "Other"];
+  const categories = [
+    "Football",
+    "Cricket",
+    "Basketball",
+    "Tennis",
+    "Swimming",
+    "Other",
+  ];
 
-    const [name, setName] = useState("");
-    const [category, setCategory] = useState("");
-    const [description, setDescription] = useState("");
-    const [logoFile, setLogoFile] = useState(null);
-    const [bannerFile, setBannerFile] = useState(null);
-    const [logoPreview, setLogoPreview] = useState(null);
-    const [bannerPreview, setBannerPreview] = useState(null);
-    const [errors, setErrors] = useState({});
-    const [submitting, setSubmitting] = useState(false);
-    const [success, setSuccess] = useState(false);
+  const [name, setName] = useState("");
+  const [category, setCategory] = useState("");
+  const [description, setDescription] = useState("");
+  const [logoFile, setLogoFile] = useState(null);
+  const [bannerFile, setBannerFile] = useState(null);
+  const [logoPreview, setLogoPreview] = useState(null);
+  const [bannerPreview, setBannerPreview] = useState(null);
+  const [errors, setErrors] = useState({});
+  const [submitting, setSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
 
-    useEffect(() => {
-        if (logoFile) {
-            const url = URL.createObjectURL(logoFile);
-            setLogoPreview(url);
-            return () => URL.revokeObjectURL(url);
-        } else {
-            setLogoPreview(null);
-        }
-    }, [logoFile]);
+  useEffect(() => {
+    if (logoFile) {
+      const url = URL.createObjectURL(logoFile);
+      setLogoPreview(url);
+      return () => URL.revokeObjectURL(url);
+    } else setLogoPreview(null);
+  }, [logoFile]);
 
-    useEffect(() => {
-        if (bannerFile) {
-            const url = URL.createObjectURL(bannerFile);
-            setBannerPreview(url);
-            return () => URL.revokeObjectURL(url);
-        } else {
-            setBannerPreview(null);
-        }
-    }, [bannerFile]);
+  useEffect(() => {
+    if (bannerFile) {
+      const url = URL.createObjectURL(bannerFile);
+      setBannerPreview(url);
+      return () => URL.revokeObjectURL(url);
+    } else setBannerPreview(null);
+  }, [bannerFile]);
 
-    function validate() {
-        const e = {};
-        if (!name.trim()) e.name = "Academy name is required.";
-        if (!category) e.category = "Please select a category.";
-        if (!description.trim()) e.description = "Description is required.";
-        // logo and banner optional but limit types/sizes
-        if (logoFile && !/^image\/(png|jpe?g|webp|svg\+xml)$/.test(logoFile.type)) e.logo = "Logo must be an image.";
-        if (bannerFile && !/^image\/(png|jpe?g|webp)$/.test(bannerFile.type)) e.banner = "Banner must be a JPG/PNG/WebP.";
-        return e;
+  const validate = () => {
+    const e = {};
+    if (!name.trim()) e.name = "Academy name is required.";
+    if (!category) e.category = "Please select a category.";
+    if (!description.trim()) e.description = "Description is required.";
+    if (
+      logoFile &&
+      !/^image\/(png|jpe?g|webp|svg\+xml)$/.test(logoFile.type)
+    )
+      e.logo = "Logo must be an image.";
+    if (bannerFile && !/^image\/(png|jpe?g|webp)$/.test(bannerFile.type))
+      e.banner = "Banner must be JPG, PNG, or WebP.";
+    return e;
+  };
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setSuccess(false);
+    const v = validate();
+    setErrors(v);
+    if (Object.keys(v).length) return;
+
+    setSubmitting(true);
+    try {
+      setSuccess(true);
+      setName("");
+      setCategory("");
+      setDescription("");
+      setLogoFile(null);
+      setBannerFile(null);
+      setErrors({});
+    } catch (err) {
+      setErrors({ submit: err.message || "Submission failed." });
+    } finally {
+      setSubmitting(false);
     }
+  }
 
-    async function handleSubmit(e) {
-        e.preventDefault();
-        setSuccess(false);
-        const v = validate();
-        setErrors(v);
-        if (Object.keys(v).length) return;
+  return (
+    <div className="min-h-screen bg-green-100 dark:bg-gray-900 flex flex-col">
+      {/* Back Button */}
+      <div className="p-4 flex items-center bg-white dark:bg-gray-800 shadow-sm">
+        <button
+          onClick={() => window.history.back()}
+          className="flex items-center gap-2 text-gray-800 dark:text-gray-200 hover:text-green-600 transition"
+        >
+          <ArrowLeft size={20} />
+          <span className="font-medium text-sm sm:text-base">Back</span>
+        </button>
+      </div>
 
-        setSubmitting(true);
-        try {
-            const formData = new FormData();
-            formData.append("name", name);
-            formData.append("category", category);
-            formData.append("description", description);
-            if (logoFile) formData.append("logo", logoFile);
-            if (bannerFile) formData.append("banner", bannerFile);
+      {/* Main Content */}
+      <main className="flex-1 w-full flex flex-col p-4 sm:p-6">
+        <form
+          onSubmit={handleSubmit}
+          className="w-full bg-white dark:bg-gray-800 dark:text-gray-100 rounded-2xl shadow-lg p-8 space-y-6"
+        >
+          <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100">
+            Create Academic Group
+          </h2>
 
-            // Example: POST to /api/academies
-            // Replace URL with your real endpoint.
-            const res = await fetch("/api/academies", {
-                method: "POST",
-                body: formData,
-            });
+          {success && (
+            <div className="p-3 rounded-md bg-green-50 text-green-800 text-sm dark:bg-green-800 dark:text-green-100">
+              Academy created successfully.
+            </div>
+          )}
 
-            if (!res.ok) throw new Error("Failed to create academy");
-            setSuccess(true);
-            setName("");
-            setCategory("");
-            setDescription("");
-            setLogoFile(null);
-            setBannerFile(null);
-            setErrors({});
-        } catch (err) {
-            setErrors({ submit: err.message || "Submission failed." });
-        } finally {
-            setSubmitting(false);
-        }
-    }
+          {errors.submit && (
+            <div className="p-3 rounded-md bg-red-50 text-red-800 text-sm dark:bg-red-800 dark:text-red-100">
+              {errors.submit}
+            </div>
+          )}
 
-    return (
-        <div className="min-h-screen bg-green-100 dark:bg-gray-900 flex items-center justify-center p-6">
-            <form
-                onSubmit={handleSubmit}
-                className="w-full max-w-3xl bg-white dark:bg-gray-800 dark:text-gray-100 rounded-2xl shadow-lg p-8 space-y-6 "
+          {/* Inputs */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                Academy Name
+              </label>
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className={`block w-full rounded-lg border px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${
+                  errors.name
+                    ? "border-red-300 dark:border-red-600"
+                    : "border-gray-200 dark:border-gray-700"
+                }`}
+                placeholder="e.g. Riverside Sports Academy"
+              />
+              {errors.name && (
+                <p className="mt-1 text-xs text-red-600 dark:text-red-300">
+                  {errors.name}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                Category
+              </label>
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className={`block w-full rounded-lg border bg-gray-100 dark:bg-gray-700 px-4 py-2 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-400 ${
+                  errors.category
+                    ? "border-red-300 dark:border-red-600"
+                    : "border-gray-200 dark:border-gray-700"
+                }`}
+              >
+                <option value="">Choose a category</option>
+                {categories.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+              {errors.category && (
+                <p className="mt-1 text-xs text-red-600 dark:text-red-300">
+                  {errors.category}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+              Description
+            </label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={5}
+              className={`block w-full rounded-lg border px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${
+                errors.description
+                  ? "border-red-300 dark:border-red-600"
+                  : "border-gray-200 dark:border-gray-700"
+              }`}
+              placeholder="Write about the academy, focus areas, or training schedule..."
+            />
+            {errors.description && (
+              <p className="mt-1 text-xs text-red-600 dark:text-red-300">
+                {errors.description}
+              </p>
+            )}
+          </div>
+
+          {/* Uploads */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                Logo (optional)
+              </label>
+              <label className="flex items-center justify-center h-36 border-2 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600">
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => setLogoFile(e.target.files?.[0] ?? null)}
+                />
+                {logoPreview ? (
+                  <img
+                    src={logoPreview}
+                    alt="logo preview"
+                    className="max-h-32 object-contain"
+                  />
+                ) : (
+                  <div className="text-sm text-gray-500 dark:text-gray-300 px-4 text-center">
+                    Click to upload logo
+                  </div>
+                )}
+              </label>
+              {errors.logo && (
+                <p className="mt-1 text-xs text-red-600 dark:text-red-300">
+                  {errors.logo}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                Banner (optional)
+              </label>
+              <label className="flex items-center justify-center h-36 border-2 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600">
+                <input
+                  type="file"
+                  accept="image/png, image/jpeg, image/webp"
+                  className="hidden"
+                  onChange={(e) => setBannerFile(e.target.files?.[0] ?? null)}
+                />
+                {bannerPreview ? (
+                  <img
+                    src={bannerPreview}
+                    alt="banner preview"
+                    className="w-full h-36 object-cover rounded-lg"
+                  />
+                ) : (
+                  <div className="text-sm text-gray-500 dark:text-gray-300 px-4 text-center">
+                    Click to upload banner
+                  </div>
+                )}
+              </label>
+              {errors.banner && (
+                <p className="mt-1 text-xs text-red-600 dark:text-red-300">
+                  {errors.banner}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Buttons */}
+          <div className="flex items-center justify-between gap-4">
+            <button
+              type="submit"
+              disabled={submitting}
+              className="inline-flex items-center justify-center px-6 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium shadow disabled:opacity-60"
             >
-                <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100">Create Academic Group</h2>
+              {submitting ? "Creating..." : "Create Academy"}
+            </button>
 
-                {success && (
-                    <div className="p-3 rounded-md bg-green-50 text-green-800 text-sm dark:bg-green-800 dark:text-green-100">
-                        Academy created successfully.
-                    </div>
-                )}
-
-                {errors.submit && (
-                    <div className="p-3 rounded-md bg-red-50 text-red-800 text-sm dark:bg-red-800 dark:text-red-100">{errors.submit}</div>
-                )}
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2 ">
-                            Academy name
-                        </label>
-                        <input
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            className={`block w-full rounded-lg border px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${
-                                errors.name ? "border-red-300 dark:border-red-600" : "border-gray-200 dark:border-gray-700"
-                            }`}
-                            placeholder="e.g. Riverside Sports Academy"
-                        />
-                        {errors.name && <p className="mt-1 text-xs text-red-600 dark:text-red-300">{errors.name}</p>}
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2 " >Category</label>
-                        <select
-                            value={category}
-                            onChange={(e) => setCategory(e.target.value)}
-                            className={`block w-full rounded-lg  border bg-gray-100 dark:bg-gray-700 px-4 py-2 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-400  ${
-                                errors.category ? "border-red-300 dark:border-red-600" : "border-gray-200 dark:border-gray-700"
-                            }`}
-                        >
-                            <option value="">Choose a category</option>
-                            {categories.map((c) => (
-                                <option key={c} value={c}>
-                                    {c}
-                                </option>
-                            ))}
-                        </select>
-                        {errors.category && <p className="mt-1 text-xs text-red-600 dark:text-red-300">{errors.category}</p>}
-                    </div>
-                </div>
-
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Description</label>
-                    <textarea
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                        rows={5}
-                        className={`block w-full rounded-lg border px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${
-                            errors.description ? "border-red-300 dark:border-red-600" : "border-gray-200 dark:border-gray-700"
-                        }`}
-                        placeholder="Write a short description about the academy, training focus, age groups, schedule..."
-                    />
-                    {errors.description && (
-                        <p className="mt-1 text-xs text-red-600 dark:text-red-300">{errors.description}</p>
-                    )}
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Logo (optional)</label>
-                        <label
-                            className="flex items-center justify-center h-36 border-2 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600"
-                        >
-                            <input
-                                type="file"
-                                accept="image/*"
-                                className="hidden"
-                                onChange={(e) => setLogoFile(e.target.files?.[0] ?? null)}
-                            />
-                            {logoPreview ? (
-                                <img src={logoPreview} alt="logo preview" className="max-h-32 object-contain" />
-                            ) : (
-                                <div className="text-sm text-gray-500 dark:text-gray-300 px-4 text-center">
-                                    Click to upload logo (PNG, JPG, SVG)
-                                </div>
-                            )}
-                        </label>
-                        {errors.logo && <p className="mt-1 text-xs text-red-600 dark:text-red-300">{errors.logo}</p>}
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Banner (optional)</label>
-                        <label
-                            className="flex items-center justify-center h-36 border-2 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600"
-                        >
-                            <input
-                                type="file"
-                                accept="image/png, image/jpeg, image/webp"
-                                className="hidden"
-                                onChange={(e) => setBannerFile(e.target.files?.[0] ?? null)}
-                            />
-                            {bannerPreview ? (
-                                <img src={bannerPreview} alt="banner preview" className="w-full h-36 object-cover rounded-lg" />
-                            ) : (
-                                <div className="text-sm text-gray-500 dark:text-gray-300 px-4 text-center">
-                                    Click to upload banner (JPEG, PNG, WebP)
-                                </div>
-                            )}
-                        </label>
-                        {errors.banner && <p className="mt-1 text-xs text-red-600 dark:text-red-300">{errors.banner}</p>}
-                    </div>
-                </div>
-
-                <div className="flex items-center justify-between gap-4">
-                    <button
-                        type="submit"
-                        disabled={submitting}
-                        className="inline-flex items-center justify-center px-6 py-2 rounded-lg bg-gradient-to-r from-indigo-600 to-indigo-500 dark:from-indigo-700 dark:to-indigo-600 text-white font-medium shadow hover:from-indigo-700 disabled:opacity-60"
-                    >
-                        {submitting ? "Creating..." : "Create Academy"}
-                    </button>
-
-                    <button
-                        type="button"
-                        onClick={() => {
-                            setName("");
-                            setCategory("");
-                            setDescription("");
-                            setLogoFile(null);
-                            setBannerFile(null);
-                            setErrors({});
-                            setSuccess(false);
-                        }}
-                        className="text-sm text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white"
-                    >
-                        Reset
-                    </button>
-                </div>
-            </form>
-        </div>
-    );
+            <button
+              type="button"
+              onClick={() => {
+                setName("");
+                setCategory("");
+                setDescription("");
+                setLogoFile(null);
+                setBannerFile(null);
+                setErrors({});
+                setSuccess(false);
+              }}
+              className="text-sm text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white"
+            >
+              Reset
+            </button>
+          </div>
+        </form>
+      </main>
+    </div>
+  );
 }
