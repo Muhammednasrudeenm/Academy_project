@@ -56,7 +56,7 @@ export default function AcademySidebar() {
         {/* Create Academy Button */}
         <div className="mb-4">
           <NavLink
-            to="/academies/create"
+            to="/form"
             className="flex items-center justify-center gap-2 w-full py-2.5 rounded-full bg-sky-500 hover:bg-sky-600 text-white font-semibold shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-sky-400"
             onClick={() => setShowSidebar(false)}
           >
@@ -82,7 +82,7 @@ export default function AcademySidebar() {
         {/* Explore Button */}
         <div className="mt-4">
           <NavLink
-            to="/academies/explore"
+            to="/communities"
             className="flex items-center justify-center gap-2 w-full py-2.5 rounded-full bg-sky-500 hover:bg-sky-600 text-white font-semibold shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-sky-400"
             onClick={() => setShowSidebar(false)}
           >
