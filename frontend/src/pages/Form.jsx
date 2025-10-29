@@ -74,7 +74,8 @@ export default function Form() {
   }
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-green-100 dark:bg-gray-900 relative z-50 px-4 sm:px-10">
+    <div className="min-h-screen w-screen flex items-center justify-center bg-blue-100 dark:bg-gray-900 relative z-50 px-4 sm:px-10 overflow-x-hidden">
+
       {/* Back Button */}
       <div className="absolute top-4 left-4">
         <button

@@ -68,7 +68,7 @@ export default function AcademySidebar({ onClose = () => {} }) {
         <NavLink
           to="/communities"
           onClick={onClose}
-          className="flex items-center justify-center gap-2 w-full py-2.5 rounded-full bg-sky-500 hover:bg-sky-600 text-white font-semibold shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-sky-400"
+          className="flex items-center justify-center gap-2 w-full py-2.5 rounded-full bg-sky-500 hover:bg-sky-600 text-white font-semibold shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-sky-400 mb-10"
         >
           <Compass size={16} />
           <span>Explore Academies</span>
