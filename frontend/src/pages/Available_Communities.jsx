@@ -19,7 +19,7 @@ export default function Communities() {
       category: "Football",
       logo: "https://cdn-icons-png.flaticon.com/512/2784/2784065.png",
       description:
-        "A passionate community of football fans from Kerala. We discuss matches, local clubs, and host screening events every weekend!",
+        "A passionate community of football fans from Kerala. We discuss matches, local clubs, and host screening events every weekend!and host screening",
     },
     {
       id: 2,

@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { MoreVertical, Plus, X } from "lucide-react";
 import PostCard from "../components/PostCard";
 import AcademySidebar from "../components/sidebar/AcademySidebar";
+import PostCreationModal from "../components/PostCreationModal";
 
 export default function CommunityPosts() {
   const { communityId } = useParams();
@@ -12,6 +13,7 @@ export default function CommunityPosts() {
   const [showCommunityModal, setShowCommunityModal] = useState(false);
   const [showAddButton, setShowAddButton] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showPostModal, setShowPostModal] = useState(false);
 
   // Hide + button on scroll
   useEffect(() => {
@@ -48,18 +50,25 @@ export default function CommunityPosts() {
       date: "Oct 26, 2025",
       likes: 120,
       comments: 15,
-      user: { name: "Alex Johnson", profilePic: "https://randomuser.me/api/portraits/men/32.jpg" },
+      user: {
+        name: "Alex Johnson",
+        profilePic: "https://randomuser.me/api/portraits/men/32.jpg",
+      },
     },
     {
       id: 2,
       title: "Match Victory!",
       caption:
         "We did it! 🏆 Our teamwork paid off. So proud of everyone on the field. Can't wait for the next challenge.",
-      video: "https://cdn.pixabay.com/video/2019/10/14/28217-366456199_tiny.mp4",
+      video:
+        "https://cdn.pixabay.com/video/2019/10/14/28217-366456199_tiny.mp4",
       date: "Oct 25, 2025",
       likes: 340,
       comments: 42,
-      user: { name: "Sophia Lee", profilePic: "https://randomuser.me/api/portraits/women/44.jpg" },
+      user: {
+        name: "Sophia Lee",
+        profilePic: "https://randomuser.me/api/portraits/women/44.jpg",
+      },
     },
     {
       id: 3,
@@ -70,7 +79,10 @@ export default function CommunityPosts() {
       date: "Oct 26, 2025",
       likes: 120,
       comments: 15,
-      user: { name: "Alex Johnson", profilePic: "https://randomuser.me/api/portraits/men/32.jpg" },
+      user: {
+        name: "Alex Johnson",
+        profilePic: "https://randomuser.me/api/portraits/men/32.jpg",
+      },
     },
   ]);
 
@@ -98,7 +110,11 @@ export default function CommunityPosts() {
       {/* --- OVERLAY (click outside to close sidebar in mobile) --- */}
       <div
         className={`fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300 md:hidden z-[900]
-        ${sidebarOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
+        ${
+          sidebarOpen
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none"
+        }`}
         onClick={() => setSidebarOpen(false)}
       ></div>
 
@@ -110,9 +126,9 @@ export default function CommunityPosts() {
           <div className="flex items-center gap-3">
             {/* Mobile menu toggle */}
             <button
-  onClick={() => setSidebarOpen(!sidebarOpen)}
-  className="md:hidden p-2 -ml-8 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700"
->
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="md:hidden p-2 -ml-8 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700"
+            >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-6 w-6"
@@ -142,8 +158,8 @@ export default function CommunityPosts() {
             />
             <div className="flex flex-col justify-center leading-tight">
               <h2 className="text-2xl md:text-3xl font-semibold text-gray-900 dark:text-gray-100 leading-none">
-  {community.name}
-</h2>
+                {community.name}
+              </h2>
 
               {/* Description hidden on mobile */}
               <p className="hidden md:block text-xs text-gray-500 dark:text-gray-400 max-w-md leading-snug">
@@ -195,10 +211,10 @@ export default function CommunityPosts() {
       {/* --- FLOATING + BUTTON --- */}
       {showAddButton && (
         <button
-          onClick={() => navigate("/form")}
-          className="fixed bottom-6 right-6 bg-sky-500 hover:bg-sky-600 text-white p-4 rounded-full shadow-lg transition-all duration-300 z-50"
+          onClick={() => setShowPostModal(true)}
+          className="fixed bottom-8 right-5 sm:bottom-8 sm:right-6 bg-sky-500 hover:bg-sky-600 text-white p-3 sm:p-4 rounded-full shadow-lg transition-all duration-300 z-50 active:scale-95"
         >
-          <Plus size={24} />
+          <Plus size={22} />
         </button>
       )}
 
@@ -236,6 +252,16 @@ export default function CommunityPosts() {
             </p>
           </div>
         </div>
+      )}
+      {/* --- POST CREATION MODAL --- */}
+      {showPostModal && (
+        <PostCreationModal
+          onClose={() => setShowPostModal(false)}
+          onSubmit={() => {
+            console.log("Post submitted");
+            setShowPostModal(false);
+          }}
+        />
       )}
     </div>
   );
