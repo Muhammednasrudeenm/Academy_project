@@ -7,44 +7,40 @@ export default function Communities() {
   const [filter, setFilter] = useState("All");
   const [search, setSearch] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [communities, setCommunities] = useState([]); // ✅ now from backend
 
   useEffect(() => {
     document.body.style.overflow = "auto";
   }, []);
 
-  const communities = [
-    {
-      id: 1,
-      name: "Kerala Football Fans",
-      category: "Football",
-      logo: "https://cdn-icons-png.flaticon.com/512/2784/2784065.png",
-      description:
-        "A passionate community of football fans from Kerala. We discuss matches, local clubs, and host screening events every weekend!and host screening",
-    },
-    {
-      id: 2,
-      name: "Fitness Freaks",
-      category: "Health & Fitness",
-      logo: "https://cdn-icons-png.flaticon.com/512/2964/2964514.png",
-      description:
-        "Join us for fitness tips, community workouts, and motivation to stay active together.",
-    },
-    {
-      id: 3,
-      name: "Thrissur Badminton Club",
-      category: "Badminton",
-      logo: "https://cdn-icons-png.flaticon.com/512/3229/3229727.png",
-      description:
-        "We’re a friendly group of badminton lovers from Thrissur who play every evening and organize small tournaments!",
-    },
-  ];
+  // ✅ Fetch academies from backend (same structure as AcademySidebar)
+  useEffect(() => {
+    const fetchAcademies = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/academies");
+        const data = await res.json();
+
+        if (data.success && Array.isArray(data.data)) {
+          setCommunities(data.data);
+        } else {
+          console.error("Failed to fetch academies:", data.message);
+        }
+      } catch (error) {
+        console.error("Error fetching academies:", error);
+      }
+    };
+
+    fetchAcademies();
+  }, []);
 
   const handleJoin = (id) => {
     setJoined((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const categories = ["All", ...new Set(communities.map((c) => c.category))];
+  // ✅ Generate dynamic categories from fetched data
+  const categories = ["All", ...new Set(communities.map((c) => c.category || "Uncategorized"))];
 
+  // ✅ Filter + Search logic
   const filteredCommunities = communities.filter(
     (c) =>
       (filter === "All" || c.category === filter) &&
@@ -66,7 +62,7 @@ export default function Communities() {
         <AcademySidebar onClose={() => setSidebarOpen(false)} />
       </aside>
 
-      {/* ===== OVERLAY (below sidebar but above main content) ===== */}
+      {/* ===== OVERLAY ===== */}
       <div
         className={`fixed inset-0 bg-black bg-opacity-50 transition-opacity duration-300 md:hidden z-[900]
         ${sidebarOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
@@ -127,7 +123,7 @@ export default function Communities() {
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search community..."
+                placeholder="Search academy..."
                 className="w-full border border-gray-600 rounded-lg pl-10 pr-4 py-2 text-sm bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm"
               />
               <svg
@@ -147,45 +143,45 @@ export default function Communities() {
             </div>
           </div>
 
-          {/* ===== Community Cards ===== */}
+          {/* ===== Academy Cards ===== */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredCommunities.map((community) => (
+            {filteredCommunities.map((academy) => (
               <div
-                key={community.id}
+                key={academy._id}
                 className="bg-gray-900 p-5 rounded-xl shadow hover:shadow-md transition"
               >
                 <div className="flex items-center gap-4 mb-3">
                   <img
-                    src={community.logo}
-                    alt="logo"
+                    src={academy.logo}
+                    alt={academy.name}
                     className="w-12 h-12 rounded-full object-cover bg-gray-700 p-1"
                   />
                   <div>
-                    <h3 className="text-lg font-semibold text-white">
-                      {community.name}
-                    </h3>
-                    <p className="text-sm text-gray-400">{community.category}</p>
+                    <h3 className="text-lg font-semibold text-white">{academy.name}</h3>
+                    <p className="text-sm text-gray-400">
+                      {academy.category || "Uncategorized"}
+                    </p>
                   </div>
                 </div>
                 <p className="text-sm text-gray-300 mb-4 line-clamp-3">
-                  {community.description}
+                  {academy.description || "No description provided."}
                 </p>
                 <button
-                  onClick={() => handleJoin(community.id)}
+                  onClick={() => handleJoin(academy._id)}
                   className={`w-full py-2 rounded-md text-sm font-medium border transition ${
-                    joined[community.id]
+                    joined[academy._id]
                       ? "border-green-600 text-green-400 hover:bg-green-900/30"
                       : "border-indigo-600 text-indigo-400 hover:bg-indigo-900/30"
                   }`}
                 >
-                  {joined[community.id] ? "Joined" : "Join"}
+                  {joined[academy._id] ? "Joined" : "Join"}
                 </button>
               </div>
             ))}
           </div>
 
           {filteredCommunities.length === 0 && (
-            <p className="text-center text-gray-400 py-6">No communities found.</p>
+            <p className="text-center text-gray-400 py-6">No academies found.</p>
           )}
         </div>
       </main>
