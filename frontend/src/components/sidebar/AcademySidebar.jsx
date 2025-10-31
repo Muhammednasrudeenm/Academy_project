@@ -17,23 +17,32 @@ export default function AcademySidebar({ onClose = () => {} }) {
 
   // ✅ Fetch academies from backend
   useEffect(() => {
-    const fetchMyAcademies = async () => {
-      try {
-        const res = await fetch("http://localhost:5000/api/academies");
-        const data = await res.json();
-
-        if (data.success && Array.isArray(data.data)) {
-          setMyAcademies(data.data); // backend returns array of academies
-        } else {
-          console.error("Failed to fetch academies:", data.message);
-        }
-      } catch (error) {
-        console.error("Error fetching academies:", error);
+  const fetchMyAcademies = async () => {
+    try {
+      const loggedUser = JSON.parse(localStorage.getItem("user"));
+      if (!loggedUser || !loggedUser._id) {
+        console.error("No logged in user found");
+        return;
       }
-    };
 
-    fetchMyAcademies();
-  }, []);
+      const res = await fetch(
+        `http://localhost:5000/api/academies?createdBy=${loggedUser._id}`
+      );
+      const data = await res.json();
+
+      if (data.success && Array.isArray(data.data)) {
+        setMyAcademies(data.data);
+      } else {
+        console.error("Failed to fetch academies:", data.message);
+      }
+    } catch (error) {
+      console.error("Error fetching academies:", error);
+    }
+  };
+
+  fetchMyAcademies();
+}, []);
+
 
   return (
     <aside
