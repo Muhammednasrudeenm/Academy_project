@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
 import { PlusCircle, Compass, X } from "lucide-react";
 import MyAcademiesList from "./MyAcademiesList";
@@ -7,16 +7,33 @@ import JoinedAcademiesList from "./JoinedAcademiesList";
 export default function AcademySidebar({ onClose = () => {} }) {
   const [showMy, setShowMy] = useState(true);
   const [showJoined, setShowJoined] = useState(true);
+  const [myAcademies, setMyAcademies] = useState([]);
 
-  const myAcademies = [
-    { id: 1, name: "Elite Sports", logo: "https://img.icons8.com/color/48/trophy.png" },
-    { id: 2, name: "NextGen Football", logo: "https://img.icons8.com/color/48/soccer-ball.png" },
-  ];
-
+  // ✅ Dummy joined academies (keep as is)
   const joinedAcademies = [
     { id: 3, name: "Power Swimmers", logo: "https://img.icons8.com/color/48/swimming.png" },
     { id: 4, name: "Hoop Stars", logo: "https://img.icons8.com/color/48/basketball.png" },
   ];
+
+  // ✅ Fetch academies from backend
+  useEffect(() => {
+    const fetchMyAcademies = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/academies");
+        const data = await res.json();
+
+        if (data.success && Array.isArray(data.data)) {
+          setMyAcademies(data.data); // backend returns array of academies
+        } else {
+          console.error("Failed to fetch academies:", data.message);
+        }
+      } catch (error) {
+        console.error("Error fetching academies:", error);
+      }
+    };
+
+    fetchMyAcademies();
+  }, []);
 
   return (
     <aside
