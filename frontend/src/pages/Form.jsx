@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function Form() {
+  const navigate = useNavigate();
   const categories = [
     "Football",
     "Cricket",
@@ -22,6 +24,7 @@ export default function Form() {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
 
+  // Image previews
   useEffect(() => {
     if (logoFile) {
       const url = URL.createObjectURL(logoFile);
@@ -51,14 +54,37 @@ export default function Form() {
   };
 
   async function handleSubmit(e) {
-    e.preventDefault();
-    setSuccess(false);
-    const v = validate();
-    setErrors(v);
-    if (Object.keys(v).length) return;
+  e.preventDefault();
+  setSuccess(false);
+  const v = validate();
+  setErrors(v);
+  if (Object.keys(v).length) return;
 
-    setSubmitting(true);
-    try {
+  setSubmitting(true);
+  try {
+    const loggedUser = JSON.parse(localStorage.getItem("user"));
+    if (!loggedUser || !loggedUser._id) {
+      setErrors({ submit: "Please log in first to create an academy." });
+      setSubmitting(false);
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("name", name);
+    formData.append("category", category);
+    formData.append("description", description);
+    formData.append("userId", loggedUser._id); // 👈 attach user id
+    if (logoFile) formData.append("logo", logoFile);
+    if (bannerFile) formData.append("banner", bannerFile);
+
+    const res = await fetch("http://localhost:5000/api/academies/create", {
+      method: "POST",
+      body: formData,
+    });
+
+    const data = await res.json();
+
+    if (res.ok && data.success) {
       setSuccess(true);
       setName("");
       setCategory("");
@@ -66,16 +92,22 @@ export default function Form() {
       setLogoFile(null);
       setBannerFile(null);
       setErrors({});
-    } catch (err) {
-      setErrors({ submit: err.message || "Submission failed." });
-    } finally {
-      setSubmitting(false);
+      setTimeout(() => navigate("/"), 2000);
+    } else {
+      setErrors({
+        submit: data.message || "Failed to create academy. Try again.",
+      });
     }
+  } catch (err) {
+    setErrors({ submit: err.message || "Submission failed." });
+  } finally {
+    setSubmitting(false);
   }
+}
+
 
   return (
     <div className="min-h-screen w-screen flex items-center justify-center bg-blue-100 dark:bg-gray-900 relative z-50 px-4 sm:px-10 overflow-x-hidden">
-
       {/* Back Button */}
       <div className="absolute top-4 left-4">
         <button
@@ -87,7 +119,7 @@ export default function Form() {
         </button>
       </div>
 
-      {/* Main Form Container */}
+      {/* Main Form */}
       <main className="w-full flex-1 ml-0 md:ml-[16.5rem] mr-0 md:mr-[16.5rem] sm:p-4 md:p-8">
         <form
           onSubmit={handleSubmit}
@@ -99,7 +131,7 @@ export default function Form() {
 
           {success && (
             <div className="p-3 rounded-md bg-green-50 text-green-800 text-sm dark:bg-green-800 dark:text-green-100 text-center">
-              Academy created successfully.
+              ✅ Academy created successfully! Redirecting...
             </div>
           )}
 
@@ -174,7 +206,7 @@ export default function Form() {
                   ? "border-red-300 dark:border-red-600"
                   : "border-gray-200 dark:border-gray-700"
               }`}
-              placeholder="Write about the academy, focus areas, or training schedule..."
+              placeholder="Write about the academy..."
             />
             {errors.description && (
               <p className="mt-1 text-xs text-red-600 dark:text-red-300">
@@ -185,6 +217,7 @@ export default function Form() {
 
           {/* Uploads */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Logo */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                 Logo (optional)
@@ -215,6 +248,7 @@ export default function Form() {
               )}
             </div>
 
+            {/* Banner */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                 Banner (optional)

@@ -1,15 +1,21 @@
 import Academy from "../models/CreatedAcademy.js";
 
+// ✅ Create new academy
 export const createAcademy = async (req, res) => {
   try {
     console.log("📸 Uploaded files:", JSON.stringify(req.files, null, 2));
 
-    const { name, category, description } = req.body;
+    const { name, category, description, userId } = req.body; // 👈 get from frontend
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required. Please log in.",
+      });
+    }
 
     const logoUrl = req.files?.logo?.[0]?.path || "";
     const bannerUrl = req.files?.banner?.[0]?.path || "";
-
-    const createdBy = "dummy_user_12345";
 
     const academy = new Academy({
       name,
@@ -17,7 +23,7 @@ export const createAcademy = async (req, res) => {
       description,
       logo: logoUrl,
       banner: bannerUrl,
-      createdBy,
+      createdBy: userId, // 👈 store user as creator
     });
 
     await academy.save();
@@ -35,10 +41,20 @@ export const createAcademy = async (req, res) => {
     });
   }
 };
-// ✅ Fetch all academies
+
+
+// ✅ Fetch all academies (or filter by user)
 export const getAllAcademies = async (req, res) => {
   try {
-    const academies = await Academy.find().sort({ createdAt: -1 });
+    const { createdBy } = req.query; // read from ?createdBy=<userId>
+
+    // If createdBy is provided, filter academies by that user; else return all
+    const query = createdBy ? { createdBy } : {};
+
+    const academies = await Academy.find(query)
+      .populate("createdBy", "name email")
+      .sort({ createdAt: -1 });
+
     res.status(200).json({
       success: true,
       count: academies.length,
@@ -53,10 +69,12 @@ export const getAllAcademies = async (req, res) => {
   }
 };
 
-// ✅ Fetch a single academy by ID
+// ✅ Fetch single academy by ID
 export const getAcademyById = async (req, res) => {
   try {
-    const academy = await Academy.findById(req.params.id);
+    const academy = await Academy.findById(req.params.id)
+      .populate("createdBy", "name email")
+      .populate("members.userId", "name email"); // optional: show joined members
 
     if (!academy) {
       return res.status(404).json({

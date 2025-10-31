@@ -6,6 +6,10 @@ import path from "path";
 import { fileURLToPath } from "url";
 import academyRoutes from "./routes/academyRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
+
+
+
 
 dotenv.config();
 connectDB();
@@ -23,6 +27,7 @@ app.get("/", (req, res) => {
 
 app.use("/api/academies", academyRoutes);
 app.use("/api/upload", uploadRoutes);
+app.use("/api/users", userRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));

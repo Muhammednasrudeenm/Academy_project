@@ -7,7 +7,21 @@ const academySchema = new mongoose.Schema(
     description: { type: String, required: true, trim: true },
     logo: { type: String, default: "" },
     banner: { type: String, default: "" },
-    createdBy: { type: String, default: "dummy_user_id_12345" },
+
+    // ✅ Reference the User who created this academy
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+
+    // ✅ Members / Joined Users
+    members: [
+      {
+        userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        joinedAt: { type: Date, default: Date.now },
+      },
+    ],
   },
   { timestamps: true }
 );
