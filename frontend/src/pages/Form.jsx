@@ -73,7 +73,7 @@ export default function Form() {
     formData.append("name", name);
     formData.append("category", category);
     formData.append("description", description);
-    formData.append("userId", loggedUser._id); // 👈 attach user id
+    formData.append("createdBy", loggedUser._id); // 👈 attach user id
     if (logoFile) formData.append("logo", logoFile);
     if (bannerFile) formData.append("banner", bannerFile);
 

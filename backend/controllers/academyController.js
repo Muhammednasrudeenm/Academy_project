@@ -1,97 +1,103 @@
-import Academy from "../models/CreatedAcademy.js";
+import Academy from "../models/Academy.js";
 
-// ✅ Create new academy
+// 🟢 Create a new academy
 export const createAcademy = async (req, res) => {
   try {
-    console.log("📸 Uploaded files:", JSON.stringify(req.files, null, 2));
+    const { name, category, description, createdBy } = req.body;
 
-    const { name, category, description, userId } = req.body; // 👈 get from frontend
+    // ✅ Use dummy ID only for local testing
+    const creatorId =
+      createdBy && createdBy.trim() !== ""
+        ? createdBy
+        : "6906072fc7707e8d4f7b7f0f"; // <-- must be a valid ObjectId from your User collection
 
-    if (!userId) {
-      return res.status(400).json({
-        success: false,
-        message: "User ID is required. Please log in.",
-      });
-    }
-
-    const logoUrl = req.files?.logo?.[0]?.path || "";
-    const bannerUrl = req.files?.banner?.[0]?.path || "";
+    const logo = req.files?.logo?.[0]?.path || "";
+    const banner = req.files?.banner?.[0]?.path || "";
 
     const academy = new Academy({
       name,
       category,
       description,
-      logo: logoUrl,
-      banner: bannerUrl,
-      createdBy: userId, // 👈 store user as creator
+      logo,
+      banner,
+      createdBy: creatorId,
     });
 
     await academy.save();
-
-    return res.status(201).json({
-      success: true,
-      message: "Academy created successfully 🎉",
-      data: academy,
-    });
-  } catch (error) {
-    console.error("❌ Error creating academy:", error);
-    return res.status(500).json({
-      success: false,
-      message: error.message || "Error creating academy",
-    });
+    res.status(201).json(academy);
+  } catch (err) {
+    console.error("❌ Error creating academy:", err);
+    res.status(500).json({ message: err.message });
   }
 };
 
-
-// ✅ Fetch all academies (or filter by user)
+// 🟢 Get all academies
 export const getAllAcademies = async (req, res) => {
   try {
-    const { createdBy } = req.query; // read from ?createdBy=<userId>
-
-    // If createdBy is provided, filter academies by that user; else return all
-    const query = createdBy ? { createdBy } : {};
-
-    const academies = await Academy.find(query)
-      .populate("createdBy", "name email")
-      .sort({ createdAt: -1 });
-
-    res.status(200).json({
-      success: true,
-      count: academies.length,
-      data: academies,
-    });
-  } catch (error) {
-    console.error("❌ Error fetching academies:", error);
-    res.status(500).json({
-      success: false,
-      message: error.message || "Error fetching academies",
-    });
+    const academies = await Academy.find().populate("createdBy", "name email");
+    res.json(academies);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };
 
-// ✅ Fetch single academy by ID
+// 🟢 Get single academy by ID
 export const getAcademyById = async (req, res) => {
   try {
-    const academy = await Academy.findById(req.params.id)
-      .populate("createdBy", "name email")
-      .populate("members.userId", "name email"); // optional: show joined members
+    const academy = await Academy.findById(req.params.id);
+    if (!academy) return res.status(404).json({ message: "Academy not found" });
+    res.json(academy);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
 
-    if (!academy) {
-      return res.status(404).json({
-        success: false,
-        message: "Academy not found",
-      });
+// 🟢 Get academies created by a specific user
+export const getMyAcademies = async (req, res) => {
+  try {
+    const academies = await Academy.find({ createdBy: req.params.userId });
+    res.json(academies);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// 🟢 Get academies joined by a user
+export const getJoinedAcademies = async (req, res) => {
+  try {
+    const academies = await Academy.find({
+      "members.userId": req.params.userId,
+    });
+    res.json(academies);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// 🟢 Join / Leave Academy
+export const toggleJoinAcademy = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { userId } = req.body;
+
+    const academy = await Academy.findById(id);
+    if (!academy) return res.status(404).json({ message: "Academy not found" });
+
+    const isMember = academy.members.some(
+      (m) => m.userId.toString() === userId
+    );
+
+    if (isMember) {
+      academy.members = academy.members.filter(
+        (m) => m.userId.toString() !== userId
+      );
+    } else {
+      academy.members.push({ userId });
     }
 
-    res.status(200).json({
-      success: true,
-      data: academy,
-    });
-  } catch (error) {
-    console.error("❌ Error fetching academy:", error);
-    res.status(500).json({
-      success: false,
-      message: error.message || "Error fetching academy",
-    });
+    await academy.save();
+    res.json(academy);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };

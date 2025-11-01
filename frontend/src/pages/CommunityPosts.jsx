@@ -4,6 +4,7 @@ import { MoreVertical, Plus, X } from "lucide-react";
 import PostCard from "../components/PostCard";
 import AcademySidebar from "../components/sidebar/AcademySidebar";
 import PostCreationModal from "../components/PostCreationModal";
+import { fetchAcademyById, fetchPostsByAcademy } from "../api/api"; // ✅ fixed import
 
 export default function CommunityPosts() {
   const { communityId } = useParams();
@@ -15,88 +16,50 @@ export default function CommunityPosts() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showPostModal, setShowPostModal] = useState(false);
 
-  // Hide + button on scroll
+  const [community, setCommunity] = useState(null);
+  const [posts, setPosts] = useState([]);
+
+  // ✅ Hide + button on scroll
   useEffect(() => {
     let lastScroll = 0;
     const handleScroll = () => {
       const currentScroll = window.scrollY;
-      if (currentScroll > lastScroll) setShowAddButton(false);
-      else setShowAddButton(true);
+      setShowAddButton(currentScroll < lastScroll);
       lastScroll = currentScroll;
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Dummy community data
-  const community = {
-    id: communityId,
-    name: "Tech Learners Hub",
-    logo: "https://img.icons8.com/color/96/000000/code.png",
-    banner:
-      "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1600&q=80",
-    description:
-      "A space for learners to share coding tips, tutorials, and experiences in software development. We focus on helping people grow through projects, feedback, and sharing useful resources daily.",
-    members: 1243,
-  };
+  // ✅ Fetch community & posts from backend
+  useEffect(() => {
+    const loadCommunityData = async () => {
+      try {
+        const groupData = await fetchAcademyById(communityId);
+        setCommunity(groupData);
 
-  const [posts] = useState([
-    {
-      id: 1,
-      title: "Training Day Highlights",
-      caption:
-        "Great teamwork today! 💪🔥 We learned new passing techniques and tried some new defensive drills that really worked well. Excited to see how we perform next match!",
-      image: "https://images.unsplash.com/photo-1605296867304-46d5465a13f1",
-      date: "Oct 26, 2025",
-      likes: 120,
-      comments: 15,
-      user: {
-        name: "Alex Johnson",
-        profilePic: "https://randomuser.me/api/portraits/men/32.jpg",
-      },
-    },
-    {
-      id: 2,
-      title: "Match Victory!",
-      caption:
-        "We did it! 🏆 Our teamwork paid off. So proud of everyone on the field. Can't wait for the next challenge.",
-      video:
-        "https://cdn.pixabay.com/video/2019/10/14/28217-366456199_tiny.mp4",
-      date: "Oct 25, 2025",
-      likes: 340,
-      comments: 42,
-      user: {
-        name: "Sophia Lee",
-        profilePic: "https://randomuser.me/api/portraits/women/44.jpg",
-      },
-    },
-    {
-      id: 3,
-      title: "Training Day Highlights",
-      caption:
-        "Great teamwork today! 💪🔥 We learned new passing techniques and tried some new defensive drills that really worked well. Excited to see how we perform next match!",
-      image: "https://images.unsplash.com/photo-1605296867304-46d5465a13f1",
-      date: "Oct 26, 2025",
-      likes: 120,
-      comments: 15,
-      user: {
-        name: "Alex Johnson",
-        profilePic: "https://randomuser.me/api/portraits/men/32.jpg",
-      },
-    },
-  ]);
+        const postData = await fetchPostsByAcademy(communityId); // ✅ fixed name
+        setPosts(postData);
+      } catch (err) {
+        console.error("Error loading community data:", err);
+      }
+    };
 
-  const isLongDescription = community.description.length > 100;
+    loadCommunityData();
+  }, [communityId]);
+
+  const isLongDescription =
+    community && community.description && community.description.length > 100;
   const displayDescription =
     isLongDescription && !showFullDesc
       ? community.description.slice(0, 50) + "..."
-      : community.description;
+      : community?.description || "";
 
   return (
-    <div className="flex min-h-screen w-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 overflow-hidden">
+    <div className="flex min-h-screen bg-[#0f172a] text-gray-100 overflow-hidden">
       {/* --- SIDEBAR --- */}
       <aside
-        className={`fixed top-0 left-0 h-full w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 z-[1000]
+        className={`fixed top-0 left-0 h-full w-72 bg-[#15202B] border-r border-gray-700 z-[1000]
         transition-all duration-300 ease-in-out md:translate-x-0 md:opacity-100
         ${
           sidebarOpen
@@ -107,7 +70,7 @@ export default function CommunityPosts() {
         <AcademySidebar onClose={() => setSidebarOpen(false)} />
       </aside>
 
-      {/* --- OVERLAY (click outside to close sidebar in mobile) --- */}
+      {/* --- OVERLAY (mobile close) --- */}
       <div
         className={`fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300 md:hidden z-[900]
         ${
@@ -119,15 +82,14 @@ export default function CommunityPosts() {
       ></div>
 
       {/* --- MAIN CONTENT --- */}
-      <div className="flex-1 flex flex-col bg-gray-50 dark:bg-gray-900 md:ml-64">
+      <main className="flex-1 flex flex-col md:ml-72 transition-all duration-300 overflow-x-hidden">
         {/* --- TOP BAR --- */}
-        <div className="flex justify-between items-center px-4 py-3 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10 pl-10">
-          {/* Left Section */}
+        <div className="flex justify-between items-center px-6 py-3 bg-[#1E293B] border-b border-gray-700 sticky top-0 z-10">
           <div className="flex items-center gap-3">
-            {/* Mobile menu toggle */}
+            {/* Mobile hamburger */}
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="md:hidden p-2 -ml-8 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700"
+              className="md:hidden p-2 rounded-lg hover:bg-gray-700"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -142,54 +104,56 @@ export default function CommunityPosts() {
                   strokeWidth={2}
                   d={
                     sidebarOpen
-                      ? "M6 18L18 6M6 6l12 12" // X icon
-                      : "M4 6h16M4 12h16M4 18h16" // Hamburger
+                      ? "M6 18L18 6M6 6l12 12"
+                      : "M4 6h16M4 12h16M4 18h16"
                   }
                 />
               </svg>
             </button>
 
-            {/* Logo + Text */}
-            <img
-              src={community.logo}
-              alt={community.name}
-              className="w-15 h-15 rounded-full object-cover cursor-pointer border border-gray-300 dark:border-gray-600 hover:scale-105 transition-transform "
-              onClick={() => setShowCommunityModal(true)}
-            />
-            <div className="flex flex-col justify-center leading-tight">
-              <h2 className="text-2xl md:text-3xl font-semibold text-gray-900 dark:text-gray-100 leading-none">
-                {community.name}
-              </h2>
-
-              {/* Description hidden on mobile */}
-              <p className="hidden md:block text-xs text-gray-500 dark:text-gray-400 max-w-md leading-snug">
-                {displayDescription}
-                {isLongDescription && (
-                  <button
-                    onClick={() => setShowFullDesc(!showFullDesc)}
-                    className="ml-1 text-sky-500 hover:underline text-xs"
-                  >
-                    {showFullDesc ? "Show less" : "Show more"}
-                  </button>
-                )}
-              </p>
-            </div>
+            {/* Logo + Info */}
+            {community && (
+              <>
+                <img
+                  src={community.logo}
+                  alt={community.name}
+                  className="w-14 h-14 rounded-full object-cover cursor-pointer border border-gray-500 hover:scale-105 transition-transform"
+                  onClick={() => setShowCommunityModal(true)}
+                />
+                <div className="flex flex-col justify-center">
+                  <h2 className="text-2xl md:text-3xl font-bold">
+                    {community.name}
+                  </h2>
+                  <p className="hidden md:block text-xs text-gray-400 max-w-md leading-snug">
+                    {displayDescription}
+                    {isLongDescription && (
+                      <button
+                        onClick={() => setShowFullDesc(!showFullDesc)}
+                        className="ml-1 text-sky-400 hover:underline text-xs"
+                      >
+                        {showFullDesc ? "Show less" : "Show more"}
+                      </button>
+                    )}
+                  </p>
+                </div>
+              </>
+            )}
           </div>
 
-          {/* Top bar menu */}
-          <div className="flex items-center gap-2 relative">
+          {/* Menu */}
+          <div className="relative">
             <button
               onClick={() => setMenuOpen(!menuOpen)}
-              className="p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
+              className="p-1.5 rounded-full hover:bg-gray-700"
             >
               <MoreVertical size={18} />
             </button>
 
             {menuOpen && (
-              <div className="absolute right-0 top-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg w-36 text-sm">
+              <div className="absolute right-0 top-10 bg-[#1E293B] border border-gray-600 rounded-lg shadow-lg w-36 text-sm">
                 <button
                   onClick={() => alert("You left the community.")}
-                  className="block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-red-500"
+                  className="block w-full text-left px-4 py-2 hover:bg-gray-700 text-red-400"
                 >
                   Leave Community
                 </button>
@@ -199,32 +163,36 @@ export default function CommunityPosts() {
         </div>
 
         {/* --- POSTS SECTION --- */}
-        <div className="flex-1 w-full min-h-screen bg-gray-50 dark:bg-gray-900 flex justify-center p-6">
-          <div className="w-full max-w-3xl">
-            {posts.map((post) => (
-              <PostCard key={post.id} post={post} />
-            ))}
+        <div className="flex-1 flex justify-center p-6">
+          <div className="w-full max-w-2xl space-y-6">
+            {posts.length > 0 ? (
+              posts.map((post) => <PostCard key={post._id} post={post} />)
+            ) : (
+              <p className="text-center text-gray-400 mt-10">
+                No posts available yet.
+              </p>
+            )}
           </div>
         </div>
-      </div>
+      </main>
 
       {/* --- FLOATING + BUTTON --- */}
       {showAddButton && (
         <button
           onClick={() => setShowPostModal(true)}
-          className="fixed bottom-8 right-5 sm:bottom-8 sm:right-6 bg-sky-500 hover:bg-sky-600 text-white p-3 sm:p-4 rounded-full shadow-lg transition-all duration-300 z-50 active:scale-95"
+          className="fixed bottom-8 right-6 bg-sky-500 hover:bg-sky-600 text-white p-4 rounded-full shadow-lg transition-all duration-300 z-50 active:scale-95"
         >
           <Plus size={22} />
         </button>
       )}
 
       {/* --- COMMUNITY MODAL --- */}
-      {showCommunityModal && (
+      {showCommunityModal && community && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl w-11/12 max-w-md p-5 relative shadow-2xl">
+          <div className="bg-[#1E293B] rounded-2xl w-11/12 max-w-md p-5 relative shadow-2xl">
             <button
               onClick={() => setShowCommunityModal(false)}
-              className="absolute top-3 right-3 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+              className="absolute top-3 right-3 p-1 rounded-full hover:bg-gray-700"
             >
               <X size={18} />
             </button>
@@ -242,17 +210,18 @@ export default function CommunityPosts() {
               />
               <div>
                 <h2 className="text-lg font-semibold">{community.name}</h2>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {community.members.toLocaleString()} members
+                <p className="text-sm text-gray-400">
+                  {community.members?.length || 0} members
                 </p>
               </div>
             </div>
-            <p className="text-sm text-gray-700 dark:text-gray-300">
-              {community.description}
+            <p className="text-sm text-gray-300">
+              {community.description || "No description available."}
             </p>
           </div>
         </div>
       )}
+
       {/* --- POST CREATION MODAL --- */}
       {showPostModal && (
         <PostCreationModal
