@@ -8,7 +8,7 @@ const academySchema = new mongoose.Schema(
     logo: { type: String, default: "" },
     banner: { type: String, default: "" },
 
-    // ✅ Reference the User who created this academy
+    // ✅ Reference to the User who created the academy
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

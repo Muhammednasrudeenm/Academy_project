@@ -4,7 +4,7 @@ import { NavLink } from "react-router-dom";
 export default function AcademyTile({ academy }) {
   return (
     <NavLink
-      to={`/academies/${academy.id}`}
+      to={`/community/${academy._id}`} // ✅ correct route
       className={({ isActive }) =>
         `flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 ${
           isActive
