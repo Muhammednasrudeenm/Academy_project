@@ -92,7 +92,7 @@ export default function Form() {
       setLogoFile(null);
       setBannerFile(null);
       setErrors({});
-      setTimeout(() => navigate("/"), 2000);
+      setTimeout(() => navigate("/communities"), 2000);
     } else {
       setErrors({
         submit: data.message || "Failed to create academy. Try again.",
