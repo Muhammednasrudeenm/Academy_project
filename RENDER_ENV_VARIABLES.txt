@@ -1,0 +1,152 @@
+===========================================
+RENDER ENVIRONMENT VARIABLES - COPY & PASTE
+===========================================
+
+Add these in Render Dashboard → Your Service → Environment Tab
+
+---
+
+1. NODE_ENV
+   Value: production
+
+---
+
+2. PORT
+   Value: 5000
+
+---
+
+3. FRONTEND_URL
+   Value: https://your-app-name.vercel.app
+   (Update this after deploying frontend to Vercel)
+
+---
+
+4. FIREBASE_PROJECT_ID
+   Value: your-firebase-project-id
+   (Get from Firebase Console → Project Settings → Service Accounts)
+
+---
+
+5. FIREBASE_CLIENT_EMAIL
+   Value: firebase-adminsdk-xxxxx@your-project.iam.gserviceaccount.com
+   (Get from Firebase Console → Project Settings → Service Accounts → Generate New Private Key → Download JSON → Use "client_email")
+
+---
+
+6. FIREBASE_PRIVATE_KEY
+   Value: "-----BEGIN PRIVATE KEY-----\nYOUR_PRIVATE_KEY_HERE\n-----END PRIVATE KEY-----"
+   
+   IMPORTANT: 
+   - Get from Firebase Console → Project Settings → Service Accounts → Generate New Private Key
+   - Download the JSON file
+   - Copy the "private_key" value (the ENTIRE key including BEGIN and END lines)
+   - Keep the quotes and use \n for newlines
+   - OR paste the actual multi-line key (Render will handle it)
+   
+   Example format:
+   "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC...\n-----END PRIVATE KEY-----"
+
+---
+
+7. CLOUDINARY_CLOUD_NAME
+   Value: your-cloudinary-cloud-name
+   (Get from Cloudinary Dashboard)
+
+---
+
+8. CLOUDINARY_API_KEY
+   Value: your-cloudinary-api-key
+   (Get from Cloudinary Dashboard)
+
+---
+
+9. CLOUDINARY_API_SECRET
+   Value: your-cloudinary-api-secret
+   (Get from Cloudinary Dashboard)
+
+---
+
+===========================================
+HOW TO GET FIREBASE CREDENTIALS:
+===========================================
+
+1. Go to: https://console.firebase.google.com
+2. Select your Firebase project
+3. Click ⚙️ Settings → Project Settings
+4. Go to "Service Accounts" tab
+5. Click "Generate New Private Key"
+6. A JSON file will download - open it
+7. Copy these values:
+   - "project_id" → Use for FIREBASE_PROJECT_ID
+   - "client_email" → Use for FIREBASE_CLIENT_EMAIL  
+   - "private_key" → Use for FIREBASE_PRIVATE_KEY
+
+---
+
+===========================================
+HOW TO GET CLOUDINARY CREDENTIALS:
+===========================================
+
+1. Go to: https://console.cloudinary.com
+2. Login to your dashboard
+3. Copy from dashboard:
+   - Cloud Name → CLOUDINARY_CLOUD_NAME
+   - API Key → CLOUDINARY_API_KEY
+   - API Secret → CLOUDINARY_API_SECRET
+
+---
+
+===========================================
+STEPS TO ADD IN RENDER:
+===========================================
+
+1. Go to Render Dashboard: https://render.com/dashboard
+2. Click on your backend service
+3. Click "Environment" tab
+4. For each variable above:
+   - Click "Add Environment Variable"
+   - Paste the KEY name
+   - Paste the VALUE
+   - Click "Save Changes"
+5. After adding ALL variables, Render will auto-restart
+6. Check logs - should see: "✅ Using Firebase credentials from environment variables"
+
+---
+
+===========================================
+QUICK COPY-FRIENDLY FORMAT:
+===========================================
+
+KEY: NODE_ENV
+VALUE: production
+
+KEY: PORT
+VALUE: 5000
+
+KEY: FRONTEND_URL
+VALUE: https://your-app-name.vercel.app
+
+KEY: FIREBASE_PROJECT_ID
+VALUE: your-firebase-project-id
+
+KEY: FIREBASE_CLIENT_EMAIL
+VALUE: firebase-adminsdk-xxxxx@your-project.iam.gserviceaccount.com
+
+KEY: FIREBASE_PRIVATE_KEY
+VALUE: "-----BEGIN PRIVATE KEY-----\nYOUR_PRIVATE_KEY\n-----END PRIVATE KEY-----"
+
+KEY: CLOUDINARY_CLOUD_NAME
+VALUE: your-cloudinary-cloud-name
+
+KEY: CLOUDINARY_API_KEY
+VALUE: your-cloudinary-api-key
+
+KEY: CLOUDINARY_API_SECRET
+VALUE: your-cloudinary-api-secret
+
+---
+
+NOTE: Replace all placeholder values (like "your-firebase-project-id") 
+with your actual values from Firebase Console and Cloudinary Dashboard.
+
