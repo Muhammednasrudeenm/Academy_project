@@ -1,8 +1,8 @@
 // Use environment variable for API URL
-// In production (Firebase Hosting), use relative URL for rewrites
+// In production (Vercel), use relative URL for rewrites
 // In development, use localhost
 const BASE_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.PROD ? '' : 'http://localhost:5000');
+  (import.meta.env.MODE === 'production' || import.meta.env.PROD ? '' : 'http://localhost:5000');
 
 // 🟢 Fetch all academies (with caching)
 let academiesCache = null;
