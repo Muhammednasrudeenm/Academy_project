@@ -1,0 +1,23 @@
+# Firebase ignore file
+node_modules/
+.git/
+.gitignore
+*.log
+.env
+.env.local
+*.md
+README.md
+HOSTING_GUIDE.md
+DEPLOY_VERCEL_RENDER.md
+QUICK_DEPLOY.md
+FIREBASE_*.md
+CURRENT_DATABASE_STATUS.md
+
+# Backend files (already in functions/)
+backend/
+
+# Frontend source (only dist is needed)
+frontend/src/
+frontend/node_modules/
+
+
