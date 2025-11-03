@@ -2,7 +2,7 @@
 // In production (Vercel), use relative URL for rewrites
 // In development, use localhost
 const BASE_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.MODE === 'production' || import.meta.env.PROD ? '' : 'https://academy-project-94om.onrender.com');
+  (typeof window !== 'undefined' && window.location.hostname !== 'localhost' ? '' : 'http://localhost:5000');
 
 // 🟢 Fetch all academies (with caching)
 let academiesCache = null;
