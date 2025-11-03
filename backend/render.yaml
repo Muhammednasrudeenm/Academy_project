@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: academy-project-backend
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: FRONTEND_URL
+        sync: false  # Set this manually in Render dashboard
+      - key: FIREBASE_PROJECT_ID
+        sync: false  # Set this manually in Render dashboard
+      - key: FIREBASE_CLIENT_EMAIL
+        sync: false  # Set this manually in Render dashboard
+      - key: FIREBASE_PRIVATE_KEY
+        sync: false  # Set this manually in Render dashboard (use the full private key with \n for newlines)
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false  # Set this manually in Render dashboard
+      - key: CLOUDINARY_API_KEY
+        sync: false  # Set this manually in Render dashboard
+      - key: CLOUDINARY_API_SECRET
+        sync: false  # Set this manually in Render dashboard
+
