@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://academy-project-94om.onrender.com/"
+      "destination": "https://academy-project-94om.onrender.com/api/$1"
     },
     {
       "source": "/(.*)",
