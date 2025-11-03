@@ -38,6 +38,8 @@ const corsOptions = {
       // Vercel preview deployments
       /\.vercel\.app$/,
       /\.netlify\.app$/,
+      // Allow any vercel domain
+      /https?:\/\/.*\.vercel\.app$/,
     ].filter(Boolean);
     
     if (allowedOrigins.some(allowed => 
