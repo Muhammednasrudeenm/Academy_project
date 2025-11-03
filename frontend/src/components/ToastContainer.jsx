@@ -43,7 +43,7 @@ const ToastContainer = ({ toasts, removeToast }) => {
   };
 
   return (
-    <div className="fixed top-4 left-4 right-4 sm:left-auto sm:right-4 z-[10000] flex flex-col gap-3 max-w-md w-full sm:w-auto pointer-events-none">
+    <div className="fixed top-4 left-2 right-2 sm:left-auto sm:right-4 z-[99999] flex flex-col gap-3 max-w-md w-auto sm:w-auto pointer-events-none px-2 sm:px-0">
       {toasts.map((toast) => {
         const config = getToastConfig(toast.type);
         const Icon = config.icon;
@@ -53,9 +53,9 @@ const ToastContainer = ({ toasts, removeToast }) => {
             key={toast.id}
             className={`
               ${config.bg} ${config.border} ${config.text}
-              border backdrop-blur-sm shadow-2xl rounded-2xl p-4
+              border backdrop-blur-sm shadow-2xl rounded-2xl p-3.5 sm:p-4
               animate-slideInRight pointer-events-auto
-              flex items-start gap-3 w-full sm:min-w-[350px]
+              flex items-start gap-3 w-full min-w-[280px] sm:min-w-[350px] max-w-[calc(100vw-1rem)]
               relative overflow-hidden
             `}
           >
@@ -64,12 +64,12 @@ const ToastContainer = ({ toasts, removeToast }) => {
             
             {/* Icon */}
             <div className={`${config.iconColor} flex-shrink-0 mt-0.5`}>
-              <Icon size={20} className="animate-scaleIn" />
+              <Icon size={18} className="sm:w-5 sm:h-5 animate-scaleIn" />
             </div>
 
             {/* Message */}
             <div className="flex-1 min-w-0">
-              <p className={`${config.text} font-medium text-sm leading-relaxed break-words`}>
+              <p className={`${config.text} font-medium text-xs sm:text-sm leading-relaxed break-words`}>
                 {toast.message}
               </p>
             </div>

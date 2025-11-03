@@ -8,10 +8,12 @@ import PostCreationModal from "../components/PostCreationModal";
 import DefaultAcademyLogo from "../components/DefaultAcademyLogo";
 import DefaultAcademyBanner from "../components/DefaultAcademyBanner";
 import { fetchAcademyById, fetchPostsByAcademy, toggleJoinAcademy, deleteAcademy, createPost, uploadMedia, fetchJoinedAcademies, fetchMyAcademies } from "../api/api";
+import { useToast } from "../contexts/ToastContext";
 
 export default function CommunityPosts() {
   const { communityId } = useParams();
   const navigate = useNavigate();
+  const { showError, showSuccess } = useToast();
   const [menuOpen, setMenuOpen] = useState(false);
   const [showFullDesc, setShowFullDesc] = useState(false);
   const [showCommunityModal, setShowCommunityModal] = useState(false);
@@ -372,7 +374,7 @@ export default function CommunityPosts() {
   const handleComposeSubmit = async (e) => {
     e.preventDefault();
     if (!user) {
-      alert("Please login to create posts");
+      showError("Please login to create posts");
       return;
     }
 
@@ -398,7 +400,7 @@ export default function CommunityPosts() {
           }
         } catch (uploadError) {
           console.error("Upload error:", uploadError);
-          alert(`Failed to upload media: ${uploadError.message}`);
+          showError(`Failed to upload media: ${uploadError.message}`);
           setComposeLoading(false);
           return;
         }
@@ -421,13 +423,14 @@ export default function CommunityPosts() {
       setComposeFile(null);
       setComposePreview(null);
       setShowComposeBox(false);
+      showSuccess("Post created successfully!");
 
       // Refresh posts
       const refreshedPosts = await fetchPostsByAcademy(communityId);
       setPosts(refreshedPosts);
     } catch (err) {
       console.error("Error creating post:", err);
-      alert(err.message || "Error while creating post");
+      showError(err.message || "Error while creating post");
     } finally {
       setComposeLoading(false);
     }
