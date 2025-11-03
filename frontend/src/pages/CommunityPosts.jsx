@@ -562,9 +562,9 @@ export default function CommunityPosts() {
                   )}
 
                   {/* Menu Button - Only show for creators (they can edit/delete) or non-joined users (they can join) */}
-                  {/* Hide for joined non-creator users since they already have a Leave button */}
-                  {/* Explicitly check isJoined === false to avoid showing menu when isJoined is null (loading) or true (joined) */}
-                  {(isCreator || isJoined === false) && (
+                  {/* Completely hide the 3-dots button for joined non-creator users since they already have a Leave button */}
+                  {/* Only show when: user is creator OR user is definitely not joined (not during loading) */}
+                  {isCreator || (isJoined !== null && isJoined === false) ? (
                     <div ref={menuRef} className="relative z-50">
                       <button
                         onClick={() => setMenuOpen(!menuOpen)}
@@ -618,7 +618,7 @@ export default function CommunityPosts() {
                         </div>
                       )}
                     </div>
-                  )}
+                  ) : null}
         </div>
               </div>
             </div>
