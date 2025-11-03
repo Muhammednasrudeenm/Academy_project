@@ -563,7 +563,8 @@ export default function CommunityPosts() {
 
                   {/* Menu Button - Only show for creators (they can edit/delete) or non-joined users (they can join) */}
                   {/* Hide for joined non-creator users since they already have a Leave button */}
-                  {(isCreator || !isJoined) && (
+                  {/* Explicitly check isJoined === false to avoid showing menu when isJoined is null (loading) or true (joined) */}
+                  {(isCreator || isJoined === false) && (
                     <div ref={menuRef} className="relative z-50">
                       <button
                         onClick={() => setMenuOpen(!menuOpen)}
