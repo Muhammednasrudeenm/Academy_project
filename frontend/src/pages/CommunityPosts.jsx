@@ -13,7 +13,7 @@ import { useToast } from "../contexts/ToastContext";
 export default function CommunityPosts() {
   const { communityId } = useParams();
   const navigate = useNavigate();
-  const { showError, showSuccess } = useToast();
+  const { showError, showSuccess, showWarning } = useToast();
   const [menuOpen, setMenuOpen] = useState(false);
   const [showFullDesc, setShowFullDesc] = useState(false);
   const [showCommunityModal, setShowCommunityModal] = useState(false);
