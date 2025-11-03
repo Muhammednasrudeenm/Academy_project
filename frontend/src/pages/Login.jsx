@@ -23,8 +23,16 @@ export default function Login() {
     setLoading(true);
     try {
       // Use BASE_URL from api.js for consistency
-      const BASE_URL = import.meta.env.VITE_API_URL || 
-        (typeof window !== 'undefined' && window.location.hostname !== 'localhost' ? '' : 'http://localhost:5000');
+      const getBaseURL = () => {
+        if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
+        if (typeof window === 'undefined') return 'http://localhost:5000';
+        const hostname = window.location.hostname;
+        if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.')) {
+          return 'http://localhost:5000';
+        }
+        return '';
+      };
+      const BASE_URL = getBaseURL();
       
       const res = await fetch(`${BASE_URL}/api/users/login`, {
         method: "POST",

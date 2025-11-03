@@ -1,8 +1,29 @@
 // Use environment variable for API URL
 // In production (Vercel), use relative URL for rewrites
 // In development, use localhost
-const BASE_URL = import.meta.env.VITE_API_URL || 
-  (typeof window !== 'undefined' && window.location.hostname !== 'localhost' ? '' : 'http://localhost:5000');
+const getBaseURL = () => {
+  // If explicitly set, use it
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+  
+  // Check if we're in browser (not SSR)
+  if (typeof window === 'undefined') {
+    return 'http://localhost:5000';
+  }
+  
+  // In browser: if hostname is localhost or 127.0.0.1, use localhost backend
+  // Otherwise, use empty string for relative URLs (Vercel rewrites)
+  const hostname = window.location.hostname;
+  if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.')) {
+    return 'http://localhost:5000';
+  }
+  
+  // Production (Vercel): use relative URLs
+  return '';
+};
+
+const BASE_URL = getBaseURL();
 
 // 🟢 Fetch all academies (with caching)
 let academiesCache = null;
