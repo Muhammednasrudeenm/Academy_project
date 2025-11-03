@@ -264,7 +264,7 @@ export default function Available_Communities() {
               className="w-full sm:w-auto min-w-[180px] border-2 border-gray-700/50 rounded-xl px-4 py-3 text-sm bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all duration-300 hover:border-gray-600"
             >
               {categories.map((c) => (
-                <option key={c} value={c} className="bg-gray-800">{c}</option>
+                <option key={c} value={c} className="bg-gray-800/70 text-white">{c}</option>
               ))}
             </select>
           </div>
@@ -458,6 +458,57 @@ export default function Available_Communities() {
         }
         .delay-1000 {
           animation-delay: 1s;
+        }
+        /* Dropdown/Select Option Styling - Consistent Glassmorphism Effect */
+        select option {
+          background-color: rgba(31, 41, 55, 0.85) !important;
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+          color: #ffffff !important;
+          padding: 12px 16px !important;
+          font-weight: 500;
+          font-size: 14px;
+          border: none;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        select option:hover {
+          background-color: rgba(147, 51, 234, 0.8) !important;
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          color: #ffffff !important;
+        }
+        select option:checked,
+        select option[selected] {
+          background-color: rgba(124, 58, 237, 0.9) !important;
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          color: #ffffff !important;
+          font-weight: 600;
+        }
+        select option:focus {
+          background-color: rgba(139, 92, 246, 0.85) !important;
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          outline: none;
+        }
+        select option:disabled {
+          color: rgba(156, 163, 175, 0.7) !important;
+          background-color: rgba(31, 41, 55, 0.5) !important;
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          cursor: not-allowed;
+        }
+        /* Styling for the select element itself */
+        select {
+          appearance: none;
+          -webkit-appearance: none;
+          -moz-appearance: none;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+          background-repeat: no-repeat;
+          background-position: right 12px center;
+          background-size: 16px;
+          padding-right: 40px !important;
         }
       `}</style>
     </div>
