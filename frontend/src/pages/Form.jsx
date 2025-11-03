@@ -3,6 +3,9 @@ import { ArrowLeft, Upload, X, CheckCircle, Sparkles, School } from "lucide-reac
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { updateAcademy } from "../api/api";
 
+// Base URL for API calls - same as api.js
+const BASE_URL = import.meta.env.VITE_API_URL || 'https://academy-project-94om.onrender.com';
+
 export default function Form() {
   const navigate = useNavigate();
   const { academyId } = useParams();
@@ -111,7 +114,7 @@ export default function Form() {
       }
     } else {
       // Create new academy
-      const res = await fetch("http://localhost:5000/api/academies/create", {
+      const res = await fetch(`${BASE_URL}/api/academies/create`, {
         method: "POST",
         body: formData,
       });
