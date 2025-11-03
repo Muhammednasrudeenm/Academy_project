@@ -1,6 +1,13 @@
-// Base URL for API calls
-// Can be overridden with VITE_API_URL environment variable
-const BASE_URL = import.meta.env.VITE_API_URL || 'https://academy-project-94om.onrender.com';
+// Smart API URL resolver: uses relative URLs in production (via Vercel rewrites)
+// or falls back to Render URL in development
+const getApiUrl = () => {
+  // In production (Vercel), use relative URLs - Vercel rewrites will proxy to Render
+  if (import.meta.env.PROD) {
+    return '';
+  }
+  // In development, use Render URL directly (or override with VITE_API_URL)
+  return import.meta.env.VITE_API_URL || 'https://academy-project-94om.onrender.com';
+};
 
 // 🟢 Fetch all academies (with caching)
 let academiesCache = null;
@@ -13,7 +20,8 @@ export const fetchAcademies = async (forceRefresh = false) => {
     return academiesCache;
   }
   
-  const res = await fetch(`${BASE_URL}/api/academies`);
+  const apiBase = getApiUrl();
+  const res = await fetch(`${apiBase}/api/academies`);
   if (!res.ok) throw new Error("Failed to fetch academies");
   const data = await res.json();
   
@@ -26,7 +34,8 @@ export const fetchAcademies = async (forceRefresh = false) => {
 
 // 🟢 Fetch a single academy by ID
 export const fetchAcademyById = async (id) => {
-  const res = await fetch(`${BASE_URL}/api/academies/${id}`);
+  const apiBase = getApiUrl();
+  const res = await fetch(`${apiBase}/api/academies/${id}`);
   if (!res.ok) throw new Error("Failed to fetch academy details");
   const data = await res.json();
   return data.data || data;
@@ -34,14 +43,16 @@ export const fetchAcademyById = async (id) => {
 
 // 🟢 Fetch posts for an academy
 export const fetchPostsByAcademy = async (id) => {
-  const res = await fetch(`${BASE_URL}/api/posts/${id}/posts`);
+  const apiBase = getApiUrl();
+  const res = await fetch(`${apiBase}/api/posts/${id}/posts`);
   if (!res.ok) throw new Error("Failed to fetch posts");
   return res.json();
 };
 
 // 🟢 Create a new post in an academy
 export const createPost = async (academyId, postData) => {
-  const res = await fetch(`${BASE_URL}/api/posts/${academyId}/posts`, {
+  const apiBase = getApiUrl();
+  const res = await fetch(`${apiBase}/api/posts/${academyId}/posts`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(postData),
@@ -55,7 +66,8 @@ export const uploadMedia = async (file) => {
   const formData = new FormData();
   formData.append("image", file); // Changed from "file" to "image" to match backend
 
-  const res = await fetch(`${BASE_URL}/api/upload/single`, {
+  const apiBase = getApiUrl();
+  const res = await fetch(`${apiBase}/api/upload/single`, {
     method: "POST",
     body: formData,
   });
@@ -78,7 +90,8 @@ export const uploadMedia = async (file) => {
 
 // 🟢 Join/Leave Academy
 export const toggleJoinAcademy = async (academyId, userId) => {
-  const res = await fetch(`${BASE_URL}/api/academies/${academyId}/toggle-join`, {
+  const apiBase = getApiUrl();
+  const res = await fetch(`${apiBase}/api/academies/${academyId}/toggle-join`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ userId }),
@@ -92,7 +105,8 @@ export const toggleJoinAcademy = async (academyId, userId) => {
 
 // 🟢 Update Academy
 export const updateAcademy = async (academyId, formData) => {
-  const res = await fetch(`${BASE_URL}/api/academies/${academyId}`, {
+  const apiBase = getApiUrl();
+  const res = await fetch(`${apiBase}/api/academies/${academyId}`, {
     method: "PUT",
     body: formData,
   });
@@ -102,7 +116,8 @@ export const updateAcademy = async (academyId, formData) => {
 
 // 🟢 Delete Academy
 export const deleteAcademy = async (academyId, userId) => {
-  const res = await fetch(`${BASE_URL}/api/academies/${academyId}`, {
+  const apiBase = getApiUrl();
+  const res = await fetch(`${apiBase}/api/academies/${academyId}`, {
     method: "DELETE",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ userId }),
@@ -113,7 +128,8 @@ export const deleteAcademy = async (academyId, userId) => {
 
 // 🟢 Like/Unlike Post
 export const toggleLikePost = async (postId, userId) => {
-  const res = await fetch(`${BASE_URL}/api/posts/like/${postId}`, {
+  const apiBase = getApiUrl();
+  const res = await fetch(`${apiBase}/api/posts/like/${postId}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ userId }),
@@ -124,28 +140,32 @@ export const toggleLikePost = async (postId, userId) => {
 
 // 🟢 Get my academies
 export const fetchMyAcademies = async (userId) => {
-  const res = await fetch(`${BASE_URL}/api/academies/user/${userId}/created`);
+  const apiBase = getApiUrl();
+  const res = await fetch(`${apiBase}/api/academies/user/${userId}/created`);
   if (!res.ok) throw new Error("Failed to fetch my academies");
   return res.json();
 };
 
 // 🟢 Get joined academies
 export const fetchJoinedAcademies = async (userId) => {
-  const res = await fetch(`${BASE_URL}/api/academies/user/${userId}/joined`);
+  const apiBase = getApiUrl();
+  const res = await fetch(`${apiBase}/api/academies/user/${userId}/joined`);
   if (!res.ok) throw new Error("Failed to fetch joined academies");
   return res.json();
 };
 
 // 🟢 Get comments for a post
 export const fetchPostComments = async (postId) => {
-  const res = await fetch(`${BASE_URL}/api/posts/comments/${postId}`);
+  const apiBase = getApiUrl();
+  const res = await fetch(`${apiBase}/api/posts/comments/${postId}`);
   if (!res.ok) throw new Error("Failed to fetch comments");
   return res.json();
 };
 
 // 🟢 Create a comment
 export const createComment = async (postId, commentData) => {
-  const res = await fetch(`${BASE_URL}/api/posts/comments/${postId}`, {
+  const apiBase = getApiUrl();
+  const res = await fetch(`${apiBase}/api/posts/comments/${postId}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(commentData),
@@ -156,7 +176,8 @@ export const createComment = async (postId, commentData) => {
 
 // 🟢 Delete a comment
 export const deleteComment = async (commentId, userId) => {
-  const res = await fetch(`${BASE_URL}/api/posts/comments/${commentId}`, {
+  const apiBase = getApiUrl();
+  const res = await fetch(`${apiBase}/api/posts/comments/${commentId}`, {
     method: "DELETE",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ userId }),

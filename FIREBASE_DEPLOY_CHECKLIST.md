@@ -168,3 +168,4 @@ cd frontend && npm run build && cd .. && firebase deploy
 **Ready to deploy! Follow the steps above. 🚀**
 
 
+

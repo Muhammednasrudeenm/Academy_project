@@ -217,3 +217,4 @@ I'll create a version that uses environment variables.
 
 **Want me to help update the Firebase config to use environment variables for Render?**
 
+

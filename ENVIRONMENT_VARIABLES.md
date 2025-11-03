@@ -98,3 +98,4 @@ Visit your Vercel URL and check browser console for API errors.
 3. Always use environment variables in production
 4. Keep sensitive keys in service dashboards only
 
+

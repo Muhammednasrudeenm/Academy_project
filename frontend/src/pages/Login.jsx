@@ -22,10 +22,17 @@ export default function Login() {
 
     setLoading(true);
     try {
-      // Use BASE_URL from api.js for consistency
-      const BASE_URL = import.meta.env.VITE_API_URL || 'https://academy-project-94om.onrender.com';
+      // Smart API URL resolver: uses relative URLs in production (via Vercel rewrites)
+      // or falls back to Render URL in development
+      const getApiUrl = () => {
+        if (import.meta.env.PROD) {
+          return '';
+        }
+        return import.meta.env.VITE_API_URL || 'https://academy-project-94om.onrender.com';
+      };
       
-      const res = await fetch(`${BASE_URL}/api/users/login`, {
+      const apiBase = getApiUrl();
+      const res = await fetch(`${apiBase}/api/users/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

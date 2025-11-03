@@ -88,3 +88,4 @@ Your app now feels **much faster** and more responsive! 🚀
 - Join an academy - instant feedback
 - Login - faster redirect
 
+

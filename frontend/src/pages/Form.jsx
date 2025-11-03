@@ -3,8 +3,14 @@ import { ArrowLeft, Upload, X, CheckCircle, Sparkles, School } from "lucide-reac
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { updateAcademy } from "../api/api";
 
-// Base URL for API calls - same as api.js
-const BASE_URL = import.meta.env.VITE_API_URL || 'https://academy-project-94om.onrender.com';
+// Smart API URL resolver: uses relative URLs in production (via Vercel rewrites)
+// or falls back to Render URL in development
+const getApiUrl = () => {
+  if (import.meta.env.PROD) {
+    return '';
+  }
+  return import.meta.env.VITE_API_URL || 'https://academy-project-94om.onrender.com';
+};
 
 export default function Form() {
   const navigate = useNavigate();
@@ -114,7 +120,8 @@ export default function Form() {
       }
     } else {
       // Create new academy
-      const res = await fetch(`${BASE_URL}/api/academies/create`, {
+      const apiBase = getApiUrl();
+      const res = await fetch(`${apiBase}/api/academies/create`, {
         method: "POST",
         body: formData,
       });

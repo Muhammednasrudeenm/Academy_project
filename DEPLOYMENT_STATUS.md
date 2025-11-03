@@ -98,3 +98,4 @@ User → Vercel Frontend → /api/academies
 
 **Your backend is ready! Just waiting for frontend deployment to complete, then update FRONTEND_URL in Render.**
 
+
