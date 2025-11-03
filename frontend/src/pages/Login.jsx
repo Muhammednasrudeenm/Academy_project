@@ -25,12 +25,12 @@ export default function Login() {
       // Use BASE_URL from api.js for consistency
       const getBaseURL = () => {
         if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
-        if (typeof window === 'undefined') return 'http://localhost:5000';
+        if (typeof window === 'undefined') return 'https://academy-project-94om.onrender.com';
         const hostname = window.location.hostname;
         if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.')) {
           return 'http://localhost:5000';
         }
-        return '';
+        return 'https://academy-project-94om.onrender.com';
       };
       const BASE_URL = getBaseURL();
       

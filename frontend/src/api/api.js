@@ -10,23 +10,22 @@ const getBaseURL = () => {
   
   // Check if we're in browser (not SSR)
   if (typeof window === 'undefined') {
-    console.log('🔧 SSR detected, using localhost');
-    return 'http://localhost:5000';
+    console.log('🔧 SSR detected, using Render backend');
+    return 'https://academy-project-94om.onrender.com';
   }
   
   // In browser: check hostname
   const hostname = window.location.hostname;
-  const href = window.location.href;
   
-  // If hostname is localhost or local IP, use localhost backend
+  // If hostname is localhost or local IP, use localhost backend for local development
   if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.')) {
     console.log('🔧 Localhost detected, using localhost:5000');
     return 'http://localhost:5000';
   }
   
-  // Production (Vercel): use relative URLs (empty string)
-  console.log('🔧 Production detected (hostname:', hostname, '), using relative URLs');
-  return '';
+  // Production (Vercel): use Render backend directly
+  console.log('🔧 Production detected (hostname:', hostname, '), using Render backend');
+  return 'https://academy-project-94om.onrender.com';
 };
 
 const BASE_URL = getBaseURL();
