@@ -1,12 +1,14 @@
 // Smart API URL resolver: uses relative URLs in production (via Vercel rewrites)
 // or falls back to Render URL in development
 const getApiUrl = () => {
-  // In production (Vercel), use relative URLs - Vercel rewrites will proxy to Render
-  if (import.meta.env.PROD) {
-    return '';
+  // Check runtime hostname - if on localhost, use Render URL directly
+  // Otherwise use relative URLs (Vercel rewrites will proxy to Render)
+  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+    // Local development - use Render URL directly or override with VITE_API_URL
+    return import.meta.env.VITE_API_URL || 'https://academy-project-94om.onrender.com';
   }
-  // In development, use Render URL directly (or override with VITE_API_URL)
-  return import.meta.env.VITE_API_URL || 'https://academy-project-94om.onrender.com';
+  // Production (Vercel) - use relative URLs, Vercel rewrites will proxy to Render
+  return '';
 };
 
 // 🟢 Fetch all academies (with caching)

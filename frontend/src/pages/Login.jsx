@@ -25,10 +25,13 @@ export default function Login() {
       // Smart API URL resolver: uses relative URLs in production (via Vercel rewrites)
       // or falls back to Render URL in development
       const getApiUrl = () => {
-        if (import.meta.env.PROD) {
-          return '';
+        // Check runtime hostname - if on localhost, use Render URL directly
+        // Otherwise use relative URLs (Vercel rewrites will proxy to Render)
+        if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+          return import.meta.env.VITE_API_URL || 'https://academy-project-94om.onrender.com';
         }
-        return import.meta.env.VITE_API_URL || 'https://academy-project-94om.onrender.com';
+        // Production (Vercel) - use relative URLs, Vercel rewrites will proxy to Render
+        return '';
       };
       
       const apiBase = getApiUrl();
