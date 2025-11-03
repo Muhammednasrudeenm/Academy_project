@@ -26,7 +26,7 @@ export default function DashboardLayout({ children }) {
 
   // Fetch joined academies when modal opens
   const loadJoinedAcademies = useCallback(async () => {
-    if (showJoinedAcademiesModal && user?._id) {
+    if (user?._id) {
       try {
         const data = await fetchJoinedAcademies(user._id);
         if (data.success && Array.isArray(data.data)) {
@@ -36,14 +36,37 @@ export default function DashboardLayout({ children }) {
         console.error("Error loading joined academies:", error);
       }
     }
-  }, [showJoinedAcademiesModal, user?._id]);
+  }, [user?._id]);
 
   useEffect(() => {
     if (showJoinedAcademiesModal) {
       loadJoinedAcademies();
     }
     
-    const handleMembershipChange = () => {
+    const handleMembershipChange = (event) => {
+      const { detail } = event;
+      if (!detail || !user?._id) return;
+      
+      // Immediate optimistic update
+      if (detail.academy && detail.isJoining !== undefined) {
+        if (detail.isJoining) {
+          // Add to joined academies list
+          setJoinedAcademies((prev) => {
+            // Check if already in list
+            const exists = prev.some(a => (a._id || a.id) === (detail.academyId || detail.academy._id || detail.academy.id));
+            if (exists) return prev;
+            // Add the academy
+            return [...prev, detail.academy];
+          });
+        } else {
+          // Remove from joined academies list
+          setJoinedAcademies((prev) => 
+            prev.filter(a => (a._id || a.id) !== (detail.academyId || detail.academy?._id || detail.academy?.id))
+          );
+        }
+      }
+      
+      // Also refresh from server if modal is open
       if (showJoinedAcademiesModal && user?._id) {
         loadJoinedAcademies();
       }

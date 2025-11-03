@@ -18,8 +18,13 @@
     "multer-storage-cloudinary": "^4.0.0"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
+    "jsdom": "^27.1.0",
     "nodemon": "^3.1.0",
     "terser": "^5.44.0",
-    "vite-plugin-compression": "^0.5.1"
+    "vite-plugin-compression": "^0.5.1",
+    "vitest": "^4.0.6"
   }
 }

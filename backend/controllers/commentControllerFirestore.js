@@ -44,6 +44,12 @@ export const createComment = async (req, res) => {
       return res.status(400).json({ message: "User ID is required" });
     }
 
+    // Validate character limit
+    const MAX_COMMENT_LENGTH = 5000;
+    if (text.length > MAX_COMMENT_LENGTH) {
+      return res.status(400).json({ message: `Comment cannot exceed ${MAX_COMMENT_LENGTH} characters` });
+    }
+
     const post = await Post.getPostById(postId);
     if (!post) {
       return res.status(404).json({ message: "Post not found" });

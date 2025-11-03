@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback, memo } from "react";
 import { Heart, MessageCircle, X, Send } from "lucide-react";
 import { toggleLikePost, fetchPostComments, createComment, deleteComment } from "../api/api";
+import ExpandableText from "./ExpandableText";
 
 const PostCard = memo(function PostCard({ post, onPostUpdate }) {
   const [isLiked, setIsLiked] = useState(false);
@@ -72,6 +73,11 @@ const PostCard = memo(function PostCard({ post, onPostUpdate }) {
     }
 
     if (!commentText.trim()) {
+      return;
+    }
+
+    if (commentText.length > 5000) {
+      alert("Comment cannot exceed 5000 characters");
       return;
     }
 
@@ -246,9 +252,17 @@ const PostCard = memo(function PostCard({ post, onPostUpdate }) {
 
           {/* Caption */}
           {post.caption && (
-            <p className="text-base sm:text-lg md:text-xl text-gray-300 whitespace-pre-wrap break-words leading-relaxed overflow-wrap-anywhere">
-              {post.caption}
-            </p>
+            <div className="text-base sm:text-lg md:text-xl text-gray-300 leading-relaxed overflow-wrap-anywhere">
+              {post.caption && post.caption.length > 500 ? (
+                <ExpandableText 
+                  key={`expandable-caption-${post._id}`}
+                  text={String(post.caption)} 
+                  maxLength={500} 
+                />
+              ) : (
+                <span className="whitespace-pre-wrap break-words">{post.caption}</span>
+              )}
+            </div>
           )}
         </div>
 
@@ -336,21 +350,35 @@ const PostCard = memo(function PostCard({ post, onPostUpdate }) {
                       {user?.name?.[0]?.toUpperCase() || "U"}
                     </div>
                   </div>
-                  <div className="flex-1 flex gap-2">
-                    <input
-                      type="text"
-                      value={commentText}
-                      onChange={(e) => setCommentText(e.target.value)}
-                      placeholder="Write a comment..."
-                      className="flex-1 bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm border-2 border-gray-700/50 rounded-xl px-4 py-2.5 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500 transition-all duration-300"
-                    />
-                    <button
-                      type="submit"
-                      disabled={commentLoading || !commentText.trim()}
-                      className="px-4 py-2.5 bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg hover:shadow-sky-500/50 transform hover:scale-105"
-                    >
-                      <Send size={16} />
-                    </button>
+                  <div className="flex-1 flex flex-col gap-2">
+                    <div className="flex gap-2">
+                      <textarea
+                        value={commentText}
+                        onChange={(e) => {
+                          if (e.target.value.length <= 5000) {
+                            setCommentText(e.target.value);
+                          }
+                        }}
+                        placeholder="Write a comment..."
+                        rows={commentText.length > 100 ? 3 : 1}
+                        className="flex-1 bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm border-2 border-gray-700/50 rounded-xl px-4 py-2.5 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500 transition-all duration-300 resize-none"
+                      />
+                      <button
+                        type="submit"
+                        disabled={commentLoading || !commentText.trim() || commentText.length > 5000}
+                        className="px-4 py-2.5 bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg hover:shadow-sky-500/50 transform hover:scale-105 self-start"
+                      >
+                        <Send size={16} />
+                      </button>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className={`text-xs ${commentText.length > 5000 ? 'text-red-400' : commentText.length > 4500 ? 'text-yellow-400' : 'text-gray-500'}`}>
+                        {commentText.length} / 5000
+                      </span>
+                      {commentText.length > 5000 && (
+                        <span className="text-xs text-red-400">Character limit exceeded</span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </form>
@@ -364,10 +392,10 @@ const PostCard = memo(function PostCard({ post, onPostUpdate }) {
                   <p className="text-gray-400 text-sm">Loading comments...</p>
                 </div>
               ) : comments.length > 0 ? (
-                comments.map((comment) => {
+                comments.map((comment, index) => {
                   const isCommentOwner = user && comment.user?._id?.toString() === user._id;
                   return (
-                    <div key={comment._id} className="flex gap-3 animate-fadeIn">
+                    <div key={`comment-${comment._id}-${index}`} className="flex gap-3 animate-fadeIn">
                       <div className="relative flex-shrink-0">
                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-sky-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm shadow-lg ring-2 ring-sky-500/30">
                           {comment.user?.name?.[0]?.toUpperCase() || "U"}
@@ -392,7 +420,20 @@ const PostCard = memo(function PostCard({ post, onPostUpdate }) {
                             </button>
                           )}
                         </div>
-                        <p className="text-sm text-gray-300 leading-relaxed">{comment.text}</p>
+                        <div 
+                          className="text-sm text-gray-300 leading-relaxed"
+                          style={{ position: 'relative' }}
+                        >
+                          {comment.text && String(comment.text).trim().length > 300 ? (
+                            <ExpandableText 
+                              key={`expandable-comment-${comment._id}`}
+                              text={String(comment.text)} 
+                              maxLength={300}
+                            />
+                          ) : (
+                            <span className="whitespace-pre-wrap break-words">{String(comment.text || "")}</span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   );

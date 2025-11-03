@@ -49,20 +49,33 @@ export const getAllAcademies = async (req, res) => {
   try {
     const academies = await Academy.getAllAcademies();
     
-    // Populate createdBy (Firestore doesn't have populate, so we fetch manually)
-    const academiesWithCreator = await Promise.all(
-      academies.map(async (academy) => {
-        if (academy.createdBy) {
+    // Optimize: Batch fetch all unique creator IDs first
+    const creatorIds = [...new Set(academies.map(a => a.createdBy).filter(Boolean))];
+    
+    // Batch fetch all creators in parallel (much faster than N queries)
+    const creatorsMap = new Map();
+    if (creatorIds.length > 0) {
+      await Promise.all(
+        creatorIds.map(async (creatorId) => {
           try {
-            const creator = await User.getUserById(academy.createdBy);
-            academy.createdBy = creator || { _id: academy.createdBy };
+            const creator = await User.getUserById(creatorId);
+            if (creator) {
+              creatorsMap.set(creatorId, creator);
+            }
           } catch (error) {
-            academy.createdBy = { _id: academy.createdBy };
+            // Silently fail - will use placeholder
           }
-        }
-        return academy;
-      })
-    );
+        })
+      );
+    }
+    
+    // Populate createdBy from cache (no additional queries)
+    const academiesWithCreator = academies.map((academy) => {
+      if (academy.createdBy) {
+        academy.createdBy = creatorsMap.get(academy.createdBy) || { _id: academy.createdBy };
+      }
+      return academy;
+    });
 
     res.json({
       success: true,
@@ -147,7 +160,28 @@ export const toggleJoinAcademy = async (req, res) => {
     const { id } = req.params;
     const { userId } = req.body;
 
+    if (!userId) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "User ID is required" 
+      });
+    }
+
+    if (!id) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Academy ID is required" 
+      });
+    }
+
     const academy = await Academy.toggleJoinAcademy(id, userId);
+    
+    if (!academy) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "Academy not found" 
+      });
+    }
     
     res.json({
       success: true,
@@ -155,7 +189,11 @@ export const toggleJoinAcademy = async (req, res) => {
       data: academy,
     });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    console.error("Error in toggleJoinAcademy:", err.message);
+    res.status(500).json({ 
+      success: false, 
+      message: err.message || "Failed to update academy membership" 
+    });
   }
 };
 

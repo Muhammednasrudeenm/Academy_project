@@ -45,10 +45,39 @@ export default function AcademySidebar({ onClose = () => {} }) {
     fetchAcademies();
     
     // ✅ Listen for academy membership changes (join/leave)
-    const handleMembershipChange = () => {
-      if (isMounted) {
+    const handleMembershipChange = (event) => {
+      if (!isMounted) return;
+      
+      const { detail } = event;
+      if (!detail) {
+        // No detail means full refresh
         fetchAcademies();
+        return;
       }
+      
+      // Immediate optimistic update for joined academies
+      if (detail.academy && detail.isJoining !== undefined) {
+        if (detail.isJoining) {
+          // Add to joined academies list immediately
+          setJoinedAcademies((prev) => {
+            const exists = prev.some(a => (a._id || a.id) === (detail.academyId || detail.academy._id || detail.academy.id));
+            if (exists) return prev;
+            return [...prev, detail.academy];
+          });
+        } else {
+          // Remove from joined academies list immediately
+          setJoinedAcademies((prev) => 
+            prev.filter(a => (a._id || a.id) !== (detail.academyId || detail.academy?._id || detail.academy?.id))
+          );
+        }
+      }
+      
+      // Always refresh from server for accuracy (with small delay to let server catch up)
+      setTimeout(() => {
+        if (isMounted) {
+          fetchAcademies();
+        }
+      }, 500);
     };
 
     window.addEventListener('academyMembershipChanged', handleMembershipChange);

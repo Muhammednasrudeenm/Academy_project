@@ -1,7 +1,9 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { LogIn, Mail, User, Sparkles, ArrowRight } from "lucide-react";
 
 export default function Login() {
+  const navigate = useNavigate();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
@@ -20,7 +22,11 @@ export default function Login() {
 
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:5000/api/users/login", {
+      // Use BASE_URL from api.js for consistency
+      const BASE_URL = import.meta.env.VITE_API_URL || 
+        (import.meta.env.PROD ? '' : 'http://localhost:5000');
+      
+      const res = await fetch(`${BASE_URL}/api/users/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -38,13 +44,12 @@ export default function Login() {
       localStorage.setItem("user", JSON.stringify(data.data));
       setSuccess(true);
 
-      // ✅ Redirect to home (academies page) after success
+      // ✅ Redirect immediately using React Router (no page reload, much faster!)
       setTimeout(() => {
-        window.location.href = "/";
-      }, 1000);
+        navigate("/", { replace: true });
+      }, 300); // Reduced from 1000ms to 300ms
     } catch (err) {
       setError(err.message);
-    } finally {
       setLoading(false);
     }
   };

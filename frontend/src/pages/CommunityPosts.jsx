@@ -26,8 +26,9 @@ export default function CommunityPosts() {
 
   const [community, setCommunity] = useState(null);
   const [posts, setPosts] = useState([]);
-  const [isJoined, setIsJoined] = useState(false);
-  const [isCreator, setIsCreator] = useState(false);
+  const [isJoined, setIsJoined] = useState(null); // null = checking, true/false = known
+  const [isCreator, setIsCreator] = useState(null); // null = checking, true/false = known
+  const [isLoadingCommunity, setIsLoadingCommunity] = useState(true);
   
   // Memoize user to prevent re-parsing on every render
   const user = useMemo(() => {
@@ -107,11 +108,16 @@ export default function CommunityPosts() {
   // ✅ Fetch community & posts from backend
   useEffect(() => {
     const loadCommunityData = async () => {
+      setIsLoadingCommunity(true);
+      // Set initial states to null while loading (prevents showing wrong UI)
+      setIsJoined(null);
+      setIsCreator(null);
+      
       try {
         const groupData = await fetchAcademyById(communityId);
         setCommunity(groupData);
 
-        // Check if user is joined or creator
+        // Check if user is joined or creator - do this FIRST before setting community
         if (user) {
           // Handle both populated (object with _id) and non-populated (string) userId in members
           const joined = groupData.members?.some((m) => {
@@ -123,8 +129,9 @@ export default function CommunityPosts() {
           const createdById = groupData.createdBy?._id || groupData.createdBy;
           const creator = createdById?.toString() === user._id || createdById === user._id;
           
-          setIsJoined(!!joined); // Ensure boolean
-          setIsCreator(!!creator); // Ensure boolean
+          // If user is creator, they are automatically considered "joined"
+          setIsCreator(!!creator);
+          setIsJoined(!!creator || !!joined); // Creator is always considered joined
         } else {
           // If no user, reset states
           setIsJoined(false);
@@ -135,6 +142,10 @@ export default function CommunityPosts() {
         setPosts(postData);
       } catch (err) {
         console.error("Error loading community data:", err);
+        setIsJoined(false);
+        setIsCreator(false);
+      } finally {
+        setIsLoadingCommunity(false);
       }
     };
 
@@ -213,26 +224,83 @@ export default function CommunityPosts() {
       return;
     }
 
+    // Optimistic update - update UI immediately
+    const previousJoinedState = isJoined;
+    const previousMembers = community?.members || [];
+    
+    // Immediately update the UI
+    setIsJoined(!isJoined);
+    setCommunity((prev) => {
+      if (!prev) return prev;
+      const isJoining = !previousJoinedState;
+      return {
+        ...prev,
+        members: isJoining
+          ? [...(prev.members || []), { userId: user._id }]
+          : (prev.members || []).filter((m) => {
+              const memberId = m.userId?._id || m.userId;
+              return String(memberId) !== String(user._id);
+            }),
+      };
+    });
+    
+    // Dispatch event immediately with academy data for instant updates
+    const isJoining = !previousJoinedState;
+    window.dispatchEvent(new CustomEvent('academyMembershipChanged', { 
+      detail: { 
+        academyId: communityId,
+        academy: {
+          ...community,
+          members: isJoining
+            ? [...(community?.members || []), { userId: user._id }]
+            : (community?.members || []).filter((m) => {
+                const memberId = m.userId?._id || m.userId;
+                return String(memberId) !== String(user._id);
+              })
+        },
+        isJoining: isJoining,
+        userId: user._id
+      } 
+    }));
+
     try {
       const result = await toggleJoinAcademy(communityId, user._id);
-      // Refresh community data to get updated members list
-      const groupData = await fetchAcademyById(communityId);
-      setCommunity(groupData);
-      
-      // Re-check if user is joined after the action
-      const joined = groupData.members?.some((m) => {
-        const memberId = m.userId?._id || m.userId;
-        return memberId?.toString() === user._id || memberId === user._id;
-      });
-      setIsJoined(!!joined); // Update state based on actual data
-      
-      // Dispatch custom event to refresh sidebar lists
-      window.dispatchEvent(new CustomEvent('academyMembershipChanged', { 
-        detail: { academyId: communityId } 
-      }));
+      if (result.success && result.data) {
+        // Update with server response for accuracy
+        setCommunity(result.data);
+        const joined = result.data.members?.some((m) => {
+          const memberId = m.userId?._id || m.userId;
+          return String(memberId) === String(user._id);
+        });
+        setIsJoined(!!joined);
+        
+        // Dispatch event again with accurate server data
+        window.dispatchEvent(new CustomEvent('academyMembershipChanged', { 
+          detail: { 
+            academyId: communityId,
+            academy: result.data,
+            isJoining: joined,
+            userId: user._id
+          } 
+        }));
+      } else {
+        // Revert on failure
+        setIsJoined(previousJoinedState);
+        setCommunity((prev) => {
+          if (!prev) return prev;
+          return { ...prev, members: previousMembers };
+        });
+        throw new Error(result.message || "Failed to update membership");
+      }
     } catch (error) {
       console.error("Error joining/leaving:", error);
-      alert("Failed to join/leave academy");
+      // Revert optimistic update on error
+      setIsJoined(previousJoinedState);
+      setCommunity((prev) => {
+        if (!prev) return prev;
+        return { ...prev, members: previousMembers };
+      });
+      alert(error.message || "Failed to join/leave academy");
     }
   };
 
@@ -250,6 +318,10 @@ export default function CommunityPosts() {
       alert(error.message || "Failed to delete academy");
     }
   };
+
+  const handlePostDelete = useCallback((deletedPostId) => {
+    setPosts((prevPosts) => prevPosts.filter((post) => post._id !== deletedPostId));
+  }, []);
 
   // Handle click outside compose box to shrink it
   useEffect(() => {
@@ -566,29 +638,50 @@ export default function CommunityPosts() {
                       {/* Compose Area */}
                       <div className="flex-1 min-w-0">
                         {showComposeBox && (
-                          <input
-                            type="text"
-                            placeholder="Title (optional)"
-                            value={composeTitle}
-                            onChange={(e) => {
-                              setComposeTitle(e.target.value);
-                              if (!showComposeBox && e.target.value) setShowComposeBox(true);
-                            }}
-                            className="w-full bg-transparent text-gray-300 placeholder-gray-500 text-xs sm:text-sm mb-1.5 focus:outline-none"
-                            onFocus={() => setShowComposeBox(true)}
-                          />
+                          <div>
+                            <input
+                              type="text"
+                              placeholder="Title (optional)"
+                              value={composeTitle}
+                              onChange={(e) => {
+                                if (e.target.value.length <= 500) {
+                                  setComposeTitle(e.target.value);
+                                  if (!showComposeBox && e.target.value) setShowComposeBox(true);
+                                }
+                              }}
+                              maxLength={500}
+                              className="w-full bg-transparent text-gray-300 placeholder-gray-500 text-xs sm:text-sm mb-1.5 focus:outline-none"
+                              onFocus={() => setShowComposeBox(true)}
+                            />
+                            <div className="text-right">
+                              <span className={`text-xs ${composeTitle.length > 500 ? 'text-red-400' : composeTitle.length > 450 ? 'text-yellow-400' : 'text-gray-500'}`}>
+                                {composeTitle.length} / 500
+                              </span>
+                            </div>
+                          </div>
                         )}
                         <textarea
                           value={composeCaption}
                           onChange={(e) => {
-                            setComposeCaption(e.target.value);
-                            if (!showComposeBox) setShowComposeBox(true);
+                            if (e.target.value.length <= 20000) {
+                              setComposeCaption(e.target.value);
+                              if (!showComposeBox) setShowComposeBox(true);
+                            }
                           }}
                           placeholder="What's happening?"
-                          rows={showComposeBox ? 2 : 1}
+                          rows={showComposeBox ? (composeCaption.length > 500 ? 4 : 2) : 1}
                           className="w-full bg-transparent text-gray-200 placeholder-gray-500 resize-none focus:outline-none text-sm sm:text-base transition-all"
                           onFocus={() => setShowComposeBox(true)}
+                          maxLength={20000}
                         />
+                        <div className="flex items-center justify-between mt-1">
+                          <span className={`text-xs ${composeCaption.length > 20000 ? 'text-red-400' : composeCaption.length > 19000 ? 'text-yellow-400' : 'text-gray-500'}`}>
+                            {composeCaption.length} / 20,000
+                          </span>
+                          {composeCaption.length > 20000 && (
+                            <span className="text-xs text-red-400">Character limit exceeded</span>
+                          )}
+                        </div>
 
                         {/* Media Preview */}
                         {composePreview && (
@@ -685,7 +778,15 @@ export default function CommunityPosts() {
               )}
 
               {/* Posts List - Only visible if joined or creator */}
-              {(isJoined || isCreator) ? (
+              {isLoadingCommunity || isJoined === null || isCreator === null ? (
+                // Loading state - don't show join screen while checking
+                <div className="flex flex-col items-center justify-center min-h-[60vh] w-full">
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-sky-500/20 to-purple-500/20 mb-4 border border-sky-500/30">
+                    <div className="w-8 h-8 border-3 border-sky-400 border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                  <p className="text-gray-400 font-medium">Loading community...</p>
+                </div>
+              ) : (isJoined || isCreator) ? (
                 posts.length > 0 ? (
                   <div className="flex flex-col gap-6 sm:gap-8 w-full max-w-full">
                   {posts.map((post) => (
@@ -701,6 +802,7 @@ export default function CommunityPosts() {
                           )
                         );
                       }}
+                      onPostDelete={handlePostDelete}
                     />
                   ))}
                 </div>
@@ -715,6 +817,7 @@ export default function CommunityPosts() {
                   </div>
                 )
               ) : (
+                // Only show join screen when we've confirmed user is NOT joined and NOT creator
                 <div className="flex flex-col items-center justify-center min-h-[60vh] w-full animate-fadeIn">
                   <div className="text-center max-w-md mx-auto p-8 rounded-3xl bg-gradient-to-br from-gray-800/50 to-gray-900/50 border border-gray-700/50 backdrop-blur-sm">
                     <div className="mb-6">

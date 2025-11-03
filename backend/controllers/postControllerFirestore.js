@@ -56,11 +56,23 @@ export const createPost = async (req, res) => {
       return res.status(403).json({ message: "You must be a member to post" });
     }
 
+    // Validate character limits
+    const MAX_POST_CAPTION = 20000;
+    const MAX_POST_TITLE = 500;
+    
+    if (caption && caption.length > MAX_POST_CAPTION) {
+      return res.status(400).json({ message: `Post caption cannot exceed ${MAX_POST_CAPTION} characters` });
+    }
+    
+    if (title && title.length > MAX_POST_TITLE) {
+      return res.status(400).json({ message: `Post title cannot exceed ${MAX_POST_TITLE} characters` });
+    }
+
     const postData = await Post.createPost({
       academy: academyId,
       user: userId,
-      title,
-      caption,
+      title: title?.trim(),
+      caption: caption?.trim(),
       image,
       video,
     });

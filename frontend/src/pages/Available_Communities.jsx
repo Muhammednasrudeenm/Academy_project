@@ -10,6 +10,7 @@ export default function Available_Communities() {
   const [communities, setCommunities] = useState([]);
   const [joined, setJoined] = useState({});
   const [loading, setLoading] = useState({});
+  const [isLoadingAcademies, setIsLoadingAcademies] = useState(true);
   const navigate = useNavigate();
   
   // Memoize user to prevent re-parsing on every render
@@ -25,9 +26,11 @@ export default function Available_Communities() {
   useEffect(() => {
     let isMounted = true;
     const loadAcademies = async () => {
-      try {
-        const data = await fetchAcademies();
-        if (isMounted && data.success && Array.isArray(data.data)) {
+      setIsLoadingAcademies(true);
+        try {
+          // Try to use cached data first, but still show loading
+          const data = await fetchAcademies(true); // Force refresh on page load
+          if (isMounted && data.success && Array.isArray(data.data)) {
           setCommunities(data.data);
           // Initialize joined state from backend
           const joinedMap = {};
@@ -43,6 +46,10 @@ export default function Available_Communities() {
         }
       } catch (error) {
         console.error("Error fetching academies:", error);
+      } finally {
+        if (isMounted) {
+          setIsLoadingAcademies(false);
+        }
       }
     };
     loadAcademies();
@@ -55,25 +62,126 @@ export default function Available_Communities() {
       return;
     }
 
-    const id = academy._id;
+    if (!user._id) {
+      alert("User ID not found. Please login again.");
+      return;
+    }
+
+    const id = academy._id || academy.id;
+    if (!id) {
+      console.error("Academy ID not found:", academy);
+      alert("Invalid academy");
+      return;
+    }
+
     setLoading((prev) => ({ ...prev, [id]: true }));
+    
+    // Optimistic update - update UI immediately
+    const previousJoinedState = joined[id] || false;
+    const previousMemberCount = academy.members?.length || 0;
+    
+    // Immediately update the UI
+    setJoined((prev) => ({ ...prev, [id]: !prev[id] }));
+    setCommunities((prev) => 
+      prev.map((a) => {
+        if (a._id === id || a.id === id) {
+          const isJoining = !previousJoinedState;
+          return {
+            ...a,
+            members: isJoining 
+              ? [...(a.members || []), { userId: user._id }]
+              : (a.members || []).filter((m) => {
+                  const memberId = m.userId?._id || m.userId;
+                  return String(memberId) !== String(user._id);
+                }),
+          };
+        }
+        return a;
+      })
+    );
+    
+    // Trigger event for sidebar update immediately with academy data
+    window.dispatchEvent(new CustomEvent('academyMembershipChanged', {
+      detail: {
+        academyId: id,
+        academy: {
+          ...academy,
+          members: previousJoinedState
+            ? (academy.members || []).filter((m) => {
+                const memberId = m.userId?._id || m.userId;
+                return String(memberId) !== String(user._id);
+              })
+            : [...(academy.members || []), { userId: user._id }]
+        },
+        isJoining: !previousJoinedState,
+        userId: user._id
+      }
+    }));
+    
     try {
       const result = await toggleJoinAcademy(id, user._id);
-      setJoined((prev) => ({ ...prev, [id]: !prev[id] }));
-      // Refresh communities to get updated member count
-      const data = await fetchAcademies();
-      if (data.success && Array.isArray(data.data)) {
-        setCommunities(data.data);
+      if (result.success) {
+        // Update with server response for accuracy
+        if (result.data) {
+          setCommunities((prev) =>
+            prev.map((a) => (a._id === id || a.id === id) ? result.data : a)
+          );
+          
+          // Dispatch event again with accurate server data
+          const joined = result.data.members?.some((m) => {
+            const memberId = m.userId?._id || m.userId;
+            return String(memberId) === String(user._id);
+          });
+          
+          window.dispatchEvent(new CustomEvent('academyMembershipChanged', {
+            detail: {
+              academyId: id,
+              academy: result.data,
+              isJoining: joined,
+              userId: user._id
+            }
+          }));
+        }
+      } else {
+        // Revert on failure
+        setJoined((prev) => ({ ...prev, [id]: previousJoinedState }));
+        setCommunities((prev) =>
+          prev.map((a) => {
+            if (a._id === id || a.id === id) {
+              return {
+                ...a,
+                members: previousJoinedState 
+                  ? [...(a.members || []), { userId: user._id }]
+                  : (a.members || []).slice(0, previousMemberCount),
+              };
+            }
+            return a;
+          })
+        );
+        throw new Error(result.message || "Failed to update membership");
       }
-      // Trigger event for sidebar update
-      window.dispatchEvent(new CustomEvent('academyMembershipChanged'));
     } catch (error) {
       console.error("Error joining academy:", error);
-      alert("Failed to join/leave academy");
+      // Revert optimistic update on error
+      setJoined((prev) => ({ ...prev, [id]: previousJoinedState }));
+      setCommunities((prev) =>
+        prev.map((a) => {
+          if (a._id === id || a.id === id) {
+            return {
+              ...a,
+              members: previousJoinedState 
+                ? [...(a.members || []), { userId: user._id }]
+                : (a.members || []).slice(0, previousMemberCount),
+            };
+          }
+          return a;
+        })
+      );
+      alert(error.message || "Failed to join/leave academy");
     } finally {
       setLoading((prev) => ({ ...prev, [id]: false }));
     }
-  }, [user]);
+  }, [user, joined]);
 
   const handleDelete = useCallback(async (academyId, e) => {
     e.stopPropagation();
@@ -183,7 +291,20 @@ export default function Available_Communities() {
           </div>
         </div>
 
+        {/* Loading State */}
+        {isLoadingAcademies && (
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-sky-500/20 to-purple-500/20 mb-4 border border-sky-500/30">
+                <div className="w-8 h-8 border-3 border-sky-400 border-t-transparent rounded-full animate-spin"></div>
+              </div>
+              <p className="text-gray-400 font-medium">Loading academies...</p>
+            </div>
+          </div>
+        )}
+
         {/* Premium Cards Grid */}
+        {!isLoadingAcademies && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-6 w-full">
           {filtered.map((a, index) => {
             // Handle both populated and non-populated createdBy
@@ -298,9 +419,10 @@ export default function Available_Communities() {
             );
           })}
         </div>
+        )}
 
         {/* Empty State */}
-        {filtered.length === 0 && (
+        {!isLoadingAcademies && filtered.length === 0 && (
           <div className="text-center py-16 animate-fadeIn">
             <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-gray-800/50 to-gray-900/50 mb-4 border border-gray-700/50">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">

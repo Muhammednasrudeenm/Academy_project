@@ -4,11 +4,26 @@
 const BASE_URL = import.meta.env.VITE_API_URL || 
   (import.meta.env.PROD ? '' : 'http://localhost:5000');
 
-// 🟢 Fetch all academies
-export const fetchAcademies = async () => {
+// 🟢 Fetch all academies (with caching)
+let academiesCache = null;
+let cacheTimestamp = 0;
+const CACHE_TTL = 30000; // 30 second cache
+
+export const fetchAcademies = async (forceRefresh = false) => {
+  // Return cached data if still valid and not forcing refresh
+  if (!forceRefresh && academiesCache && Date.now() - cacheTimestamp < CACHE_TTL) {
+    return academiesCache;
+  }
+  
   const res = await fetch(`${BASE_URL}/api/academies`);
   if (!res.ok) throw new Error("Failed to fetch academies");
-  return res.json();
+  const data = await res.json();
+  
+  // Cache the result
+  academiesCache = data;
+  cacheTimestamp = Date.now();
+  
+  return data;
 };
 
 // 🟢 Fetch a single academy by ID
@@ -70,7 +85,10 @@ export const toggleJoinAcademy = async (academyId, userId) => {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ userId }),
   });
-  if (!res.ok) throw new Error("Failed to toggle join");
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || "Failed to toggle join");
+  }
   return res.json();
 };
 

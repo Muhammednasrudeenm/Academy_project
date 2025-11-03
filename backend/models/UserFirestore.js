@@ -14,6 +14,20 @@ const docToObject = (doc) => {
   };
 };
 
+// User cache to reduce redundant queries
+let userCache = new Map();
+const CACHE_TTL = 60000; // 1 minute cache
+
+// Clear cache periodically
+setInterval(() => {
+  const now = Date.now();
+  for (const [id, cached] of userCache.entries()) {
+    if (now - cached.timestamp > CACHE_TTL) {
+      userCache.delete(id);
+    }
+  }
+}, 30000); // Clean every 30 seconds
+
 // 🟢 Create a new user
 export const createUser = async (data) => {
   const userData = {
@@ -34,10 +48,28 @@ export const createUser = async (data) => {
   return docToObject(doc);
 };
 
-// 🟢 Get user by ID
+// 🟢 Get user by ID (with caching to reduce redundant queries)
 export const getUserById = async (id) => {
-  const doc = await db.collection("users").doc(id).get();
-  return docToObject(doc);
+  if (!id) return null;
+  
+  // Check cache first
+  const cached = userCache.get(id);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    return cached.data;
+  }
+  
+  try {
+    const doc = await db.collection("users").doc(id).get();
+    if (!doc.exists) return null;
+    const user = docToObject(doc);
+    
+    // Cache the result
+    userCache.set(id, { data: user, timestamp: Date.now() });
+    
+    return user;
+  } catch (error) {
+    return null;
+  }
 };
 
 // 🟢 Get user by email
