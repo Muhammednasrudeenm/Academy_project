@@ -222,7 +222,7 @@ export default function CommunityPosts() {
 
   const handleJoinLeave = async () => {
     if (!user) {
-      alert("Please login to join academies");
+      showWarning("Please login to join academies");
       return;
     }
 
@@ -302,7 +302,7 @@ export default function CommunityPosts() {
         if (!prev) return prev;
         return { ...prev, members: previousMembers };
       });
-      alert(error.message || "Failed to join/leave academy");
+      showError(error.message || "Failed to join/leave academy");
     }
   };
 
@@ -313,11 +313,11 @@ export default function CommunityPosts() {
 
     try {
       await deleteAcademy(communityId, user._id);
-      navigate("/communities");
-      alert("Academy deleted successfully");
+      showSuccess("Academy deleted successfully");
+      setTimeout(() => navigate("/communities"), 1000);
     } catch (error) {
       console.error("Error deleting academy:", error);
-      alert(error.message || "Failed to delete academy");
+      showError(error.message || "Failed to delete academy");
     }
   };
 

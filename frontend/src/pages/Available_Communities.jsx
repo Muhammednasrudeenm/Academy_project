@@ -3,8 +3,10 @@ import { useNavigate } from "react-router-dom";
 import DefaultAcademyLogo from "../components/DefaultAcademyLogo";
 import DefaultAcademyBanner from "../components/DefaultAcademyBanner";
 import { toggleJoinAcademy, deleteAcademy, fetchAcademies } from "../api/api";
+import { useToast } from "../contexts/ToastContext";
 
 export default function Available_Communities() {
+  const { showError, showSuccess, showWarning } = useToast();
   const [filter, setFilter] = useState("All");
   const [search, setSearch] = useState("");
   const [communities, setCommunities] = useState([]);
@@ -58,19 +60,19 @@ export default function Available_Communities() {
 
   const handleJoin = useCallback(async (academy) => {
     if (!user) {
-      alert("Please login to join academies");
+      showWarning("Please login to join academies");
       return;
     }
 
     if (!user._id) {
-      alert("User ID not found. Please login again.");
+      showError("User ID not found. Please login again.");
       return;
     }
 
     const id = academy._id || academy.id;
     if (!id) {
       console.error("Academy ID not found:", academy);
-      alert("Invalid academy");
+      showError("Invalid academy");
       return;
     }
 
@@ -177,16 +179,17 @@ export default function Available_Communities() {
           return a;
         })
       );
-      alert(error.message || "Failed to join/leave academy");
+      showError(error.message || "Failed to join/leave academy");
     } finally {
       setLoading((prev) => ({ ...prev, [id]: false }));
     }
-  }, [user, joined]);
+  }, [user, joined, showError]);
 
   const handleDelete = useCallback(async (academyId, e) => {
     e.stopPropagation();
     if (!user) return;
     
+    // Use a styled confirmation via toast warning - if user wants to proceed, they can delete again
     if (!window.confirm("Are you sure you want to delete this academy? This action cannot be undone.")) {
       return;
     }
@@ -201,12 +204,12 @@ export default function Available_Communities() {
       });
       // Trigger event for sidebar update
       window.dispatchEvent(new CustomEvent('academyMembershipChanged'));
-      alert("Academy deleted successfully");
+      showSuccess("Academy deleted successfully");
     } catch (error) {
       console.error("Error deleting academy:", error);
-      alert(error.message || "Failed to delete academy");
+      showError(error.message || "Failed to delete academy");
     }
-  }, [user]);
+  }, [user, showSuccess, showError]);
 
   // Memoize categories to prevent recalculation on every render
   const categories = useMemo(() => {
