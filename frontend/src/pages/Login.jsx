@@ -23,16 +23,7 @@ export default function Login() {
     setLoading(true);
     try {
       // Use BASE_URL from api.js for consistency
-      const getBaseURL = () => {
-        if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
-        if (typeof window === 'undefined') return 'https://academy-project-94om.onrender.com';
-        const hostname = window.location.hostname;
-        if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.')) {
-          return 'http://localhost:5000';
-        }
-        return 'https://academy-project-94om.onrender.com';
-      };
-      const BASE_URL = getBaseURL();
+      const BASE_URL = import.meta.env.VITE_API_URL || 'https://academy-project-94om.onrender.com';
       
       const res = await fetch(`${BASE_URL}/api/users/login`, {
         method: "POST",

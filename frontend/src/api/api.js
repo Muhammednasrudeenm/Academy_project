@@ -1,35 +1,6 @@
-// Use environment variable for API URL
-// In production (Vercel), use relative URL for rewrites
-// In development, use localhost
-const getBaseURL = () => {
-  // If explicitly set via env var, use it
-  if (import.meta.env.VITE_API_URL) {
-    console.log('🔧 Using VITE_API_URL:', import.meta.env.VITE_API_URL);
-    return import.meta.env.VITE_API_URL;
-  }
-  
-  // Check if we're in browser (not SSR)
-  if (typeof window === 'undefined') {
-    console.log('🔧 SSR detected, using Render backend');
-    return 'https://academy-project-94om.onrender.com';
-  }
-  
-  // In browser: check hostname
-  const hostname = window.location.hostname;
-  
-  // If hostname is localhost or local IP, use localhost backend for local development
-  if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.')) {
-    console.log('🔧 Localhost detected, using localhost:5000');
-    return 'http://localhost:5000';
-  }
-  
-  // Production (Vercel): use Render backend directly
-  console.log('🔧 Production detected (hostname:', hostname, '), using Render backend');
-  return 'https://academy-project-94om.onrender.com';
-};
-
-const BASE_URL = getBaseURL();
-console.log('🔧 BASE_URL set to:', BASE_URL || '(empty - will use relative URLs)');
+// Base URL for API calls
+// Can be overridden with VITE_API_URL environment variable
+const BASE_URL = import.meta.env.VITE_API_URL || 'https://academy-project-94om.onrender.com';
 
 // 🟢 Fetch all academies (with caching)
 let academiesCache = null;
