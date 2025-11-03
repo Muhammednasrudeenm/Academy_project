@@ -2,28 +2,35 @@
 // In production (Vercel), use relative URL for rewrites
 // In development, use localhost
 const getBaseURL = () => {
-  // If explicitly set, use it
+  // If explicitly set via env var, use it
   if (import.meta.env.VITE_API_URL) {
+    console.log('🔧 Using VITE_API_URL:', import.meta.env.VITE_API_URL);
     return import.meta.env.VITE_API_URL;
   }
   
   // Check if we're in browser (not SSR)
   if (typeof window === 'undefined') {
+    console.log('🔧 SSR detected, using localhost');
     return 'http://localhost:5000';
   }
   
-  // In browser: if hostname is localhost or 127.0.0.1, use localhost backend
-  // Otherwise, use empty string for relative URLs (Vercel rewrites)
+  // In browser: check hostname
   const hostname = window.location.hostname;
+  const href = window.location.href;
+  
+  // If hostname is localhost or local IP, use localhost backend
   if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.')) {
+    console.log('🔧 Localhost detected, using localhost:5000');
     return 'http://localhost:5000';
   }
   
-  // Production (Vercel): use relative URLs
+  // Production (Vercel): use relative URLs (empty string)
+  console.log('🔧 Production detected (hostname:', hostname, '), using relative URLs');
   return '';
 };
 
 const BASE_URL = getBaseURL();
+console.log('🔧 BASE_URL set to:', BASE_URL || '(empty - will use relative URLs)');
 
 // 🟢 Fetch all academies (with caching)
 let academiesCache = null;
