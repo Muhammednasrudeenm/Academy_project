@@ -24,7 +24,7 @@ export default function Login() {
     try {
       // Use BASE_URL from api.js for consistency
       const BASE_URL = import.meta.env.VITE_API_URL || 
-        (import.meta.env.PROD ? '' : 'http://localhost:5000');
+        (import.meta.env.MODE === 'production' || import.meta.env.PROD ? '' : 'http://localhost:5000');
       
       const res = await fetch(`${BASE_URL}/api/users/login`, {
         method: "POST",
