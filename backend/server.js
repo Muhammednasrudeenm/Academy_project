@@ -9,7 +9,7 @@ import "./config/firebase.js";
 import academyRoutes from "./routes/academyRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
-import postRoutes from "./routes/PostRoutes.js";
+import postRoutes from "./routes/postRoutes.js";
 import firebaseTestRoutes from "./routes/firebaseTestRoutes.js";
 
 dotenv.config();
