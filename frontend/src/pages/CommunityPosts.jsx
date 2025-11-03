@@ -561,60 +561,63 @@ export default function CommunityPosts() {
           </div>
                   )}
 
-                  {/* Menu Button */}
-                  <div ref={menuRef} className="relative z-50">
-            <button
-              onClick={() => setMenuOpen(!menuOpen)}
-                      className="p-1.5 rounded-md hover:bg-gray-700/40 transition-colors flex items-center justify-center border border-gray-700/40 hover:border-gray-600/60"
-              aria-label="Menu"
-            >
-                      <MoreVertical size={13} className="text-gray-400 hover:text-gray-300 transition-colors" />
-            </button>
+                  {/* Menu Button - Only show for creators (they can edit/delete) or non-joined users (they can join) */}
+                  {/* Hide for joined non-creator users since they already have a Leave button */}
+                  {(isCreator || !isJoined) && (
+                    <div ref={menuRef} className="relative z-50">
+                      <button
+                        onClick={() => setMenuOpen(!menuOpen)}
+                        className="p-1.5 rounded-md hover:bg-gray-700/40 transition-colors flex items-center justify-center border border-gray-700/40 hover:border-gray-600/60"
+                        aria-label="Menu"
+                      >
+                        <MoreVertical size={13} className="text-gray-400 hover:text-gray-300 transition-colors" />
+                      </button>
 
-            {menuOpen && (
-                      <div className="absolute right-0 top-full mt-2 bg-gradient-to-br from-[#1E293B]/95 to-[#0f172a]/95 backdrop-blur-xl border border-gray-700/50 rounded-xl shadow-2xl w-44 text-sm z-[9999] overflow-hidden" style={{ zIndex: 9999 }}>
-                {isCreator ? (
-                  <>
-                    <button
-                      onClick={() => {
-                        navigate(`/form/edit/${communityId}`, { state: { academy: community } });
-                        setMenuOpen(false);
-                      }}
-                      className="flex items-center gap-3 w-full text-left px-4 py-2.5 hover:bg-blue-500/20 text-blue-400 transition-colors border-b border-gray-700/50"
-                    >
-                      <Edit size={16} />
-                      <span className="font-semibold text-xs">Edit Academy</span>
-                    </button>
-                  <button
-                    onClick={() => {
-                      handleDelete();
-                      setMenuOpen(false);
-                    }}
-                      className="flex items-center gap-3 w-full text-left px-4 py-2.5 hover:bg-red-500/20 text-red-400 transition-colors"
-                  >
-                    <Trash2 size={16} />
-                      <span className="font-semibold text-xs">Delete Academy</span>
-                  </button>
-                  </>
-                ) : (
-                  !isJoined && (
-                  <button
-                    onClick={() => {
-                      handleJoinLeave();
-                      setMenuOpen(false);
-                    }}
-                      className="flex items-center gap-3 w-full text-left px-4 py-2.5 hover:bg-sky-500/20 text-sky-400 transition-colors"
-                  >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                      </svg>
-                      <span className="font-semibold text-xs">Join Academy</span>
-                  </button>
-                  )
-                )}
-              </div>
-            )}
-          </div>
+                      {menuOpen && (
+                        <div className="absolute right-0 top-full mt-2 bg-gradient-to-br from-[#1E293B]/95 to-[#0f172a]/95 backdrop-blur-xl border border-gray-700/50 rounded-xl shadow-2xl w-44 text-sm z-[9999] overflow-hidden" style={{ zIndex: 9999 }}>
+                          {isCreator ? (
+                            <>
+                              <button
+                                onClick={() => {
+                                  navigate(`/form/edit/${communityId}`, { state: { academy: community } });
+                                  setMenuOpen(false);
+                                }}
+                                className="flex items-center gap-3 w-full text-left px-4 py-2.5 hover:bg-blue-500/20 text-blue-400 transition-colors border-b border-gray-700/50"
+                              >
+                                <Edit size={16} />
+                                <span className="font-semibold text-xs">Edit Academy</span>
+                              </button>
+                              <button
+                                onClick={() => {
+                                  handleDelete();
+                                  setMenuOpen(false);
+                                }}
+                                className="flex items-center gap-3 w-full text-left px-4 py-2.5 hover:bg-red-500/20 text-red-400 transition-colors"
+                              >
+                                <Trash2 size={16} />
+                                <span className="font-semibold text-xs">Delete Academy</span>
+                              </button>
+                            </>
+                          ) : (
+                            !isJoined && (
+                              <button
+                                onClick={() => {
+                                  handleJoinLeave();
+                                  setMenuOpen(false);
+                                }}
+                                className="flex items-center gap-3 w-full text-left px-4 py-2.5 hover:bg-sky-500/20 text-sky-400 transition-colors"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                </svg>
+                                <span className="font-semibold text-xs">Join Academy</span>
+                              </button>
+                            )
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
         </div>
               </div>
             </div>
