@@ -2,8 +2,10 @@ import React, { useState, useEffect, useRef, useMemo, useCallback, memo } from "
 import { Heart, MessageCircle, X, Send } from "lucide-react";
 import { toggleLikePost, fetchPostComments, createComment, deleteComment } from "../api/api";
 import ExpandableText from "./ExpandableText";
+import { useToast } from "../contexts/ToastContext";
 
 const PostCard = memo(function PostCard({ post, onPostUpdate }) {
+  const { showError, showSuccess } = useToast();
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -68,7 +70,7 @@ const PostCard = memo(function PostCard({ post, onPostUpdate }) {
   const handleAddComment = async (e) => {
     e.preventDefault();
     if (!user) {
-      alert("Please login to comment");
+      showError("Please login to comment");
       return;
     }
 
@@ -77,7 +79,7 @@ const PostCard = memo(function PostCard({ post, onPostUpdate }) {
     }
 
     if (commentText.length > 5000) {
-      alert("Comment cannot exceed 5000 characters");
+      showError("Comment cannot exceed 5000 characters");
       return;
     }
 
@@ -89,13 +91,14 @@ const PostCard = memo(function PostCard({ post, onPostUpdate }) {
       });
       setComments([...comments, newComment]);
       setCommentText("");
+      showSuccess("Comment added successfully!");
       // Update comment count (optimistic update)
       if (post) {
         post.comments = (post.comments || 0) + 1;
       }
     } catch (error) {
       console.error("Error adding comment:", error);
-      alert("Failed to add comment");
+      showError(error.message || "Failed to add comment");
     } finally {
       setCommentLoading(false);
     }
@@ -107,19 +110,20 @@ const PostCard = memo(function PostCard({ post, onPostUpdate }) {
     try {
       await deleteComment(commentId, user._id);
       setComments(comments.filter((c) => c._id !== commentId));
+      showSuccess("Comment deleted successfully");
       // Update comment count
       if (post) {
         post.comments = Math.max(0, (post.comments || 0) - 1);
       }
     } catch (error) {
       console.error("Error deleting comment:", error);
-      alert("Failed to delete comment");
+      showError(error.message || "Failed to delete comment");
     }
   };
 
   const handleLike = async (showDoubleTapAnimation = false) => {
     if (!user) {
-      alert("Please login to like posts");
+      showError("Please login to like posts");
       return;
     }
 
@@ -173,7 +177,7 @@ const PostCard = memo(function PostCard({ post, onPostUpdate }) {
       // Revert optimistic update on error
       setIsLiked(previousLiked);
       setLikesCount(previousCount);
-      alert("Failed to " + (previousLiked ? "unlike" : "like") + " post");
+      showError(error.message || `Failed to ${previousLiked ? "unlike" : "like"} post`);
     } finally {
       setLoading(false);
     }

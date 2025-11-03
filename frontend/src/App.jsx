@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import DashboardLayout from "./layouts/DashboardLayout";
+import { ToastProvider } from "./contexts/ToastContext";
 
 // Lazy load components for code splitting
 const Form = lazy(() => import("./pages/Form"));
@@ -17,9 +18,10 @@ const LoadingSpinner = () => (
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Suspense fallback={<LoadingSpinner />}>
-        <Routes>
+    <ToastProvider>
+      <BrowserRouter>
+        <Suspense fallback={<LoadingSpinner />}>
+          <Routes>
           <Route path="/login" element={<Login />} />
           
           {/* Landing page - Shows academies */}
@@ -51,6 +53,7 @@ export default function App() {
           />
         </Routes>
       </Suspense>
-    </BrowserRouter>
+      </BrowserRouter>
+    </ToastProvider>
   );
 }

@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { X, Image, Video } from "lucide-react";
 import { createPost, uploadMedia } from "../api/api";
+import { useToast } from "../contexts/ToastContext";
 
 export default function PostCreationModal({ academyId, onClose, onSubmit }) {
+  const { showError, showSuccess } = useToast();
   const [title, setTitle] = useState("");
   const [caption, setCaption] = useState("");
   const [file, setFile] = useState(null);
@@ -22,7 +24,7 @@ export default function PostCreationModal({ academyId, onClose, onSubmit }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!user) {
-      alert("Please login to create posts");
+      showError("Please login to create posts");
       return;
     }
 
@@ -46,7 +48,7 @@ export default function PostCreationModal({ academyId, onClose, onSubmit }) {
           }
         } catch (uploadError) {
           console.error("Upload error:", uploadError);
-          alert(`Failed to upload media: ${uploadError.message}`);
+          showError(`Failed to upload media: ${uploadError.message}`);
           setLoading(false);
           return;
         }
@@ -69,12 +71,13 @@ export default function PostCreationModal({ academyId, onClose, onSubmit }) {
         setCaption("");
         setFile(null);
         setPreview(null);
+        showSuccess("Post created successfully!");
         onSubmit(newPost);
         onClose();
       }
     } catch (err) {
       console.error("Error creating post:", err);
-      alert(err.message || "Error while creating post");
+      showError(err.message || "Error while creating post");
     } finally {
       setLoading(false);
     }
