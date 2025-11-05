@@ -1,23 +1,25 @@
 // Smart API URL resolver: uses VITE_API_URL environment variable first,
 // then falls back based on environment
 const getApiUrl = () => {
-  // Priority 1: Use VITE_API_URL from environment variables (from .env file)
-  if (import.meta.env.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL;
-  }
-  
-  // Priority 2: Check runtime hostname - if on localhost, use local backend
+  // Priority 1: Check runtime hostname - if on localhost, use local backend
   if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
     // Local development - use local backend server
     return 'http://localhost:5000';
   }
   
+  // Priority 2: Use VITE_API_URL ONLY if it's set and not empty
+  const viteApiUrl = import.meta.env.VITE_API_URL;
+  if (viteApiUrl && viteApiUrl.trim() !== '') {
+    return viteApiUrl.trim();
+  }
+  
   // Priority 3: Production - ALWAYS use direct backend URL
-  // Vercel rewrites can fail on mobile, so always use direct URL in production
+  // NEVER use relative URLs or empty strings - always use direct backend URL
+  // Vercel rewrites cause CORS issues, so we bypass them completely
   const BACKEND_URL = 'https://academy-project-94om.onrender.com';
   
-  // Always use direct backend URL in production (not localhost)
-  // This ensures mobile compatibility and avoids Vercel rewrite issues
+  // Always return direct backend URL in production
+  // This ensures mobile compatibility and avoids CORS issues with Vercel rewrites
   return BACKEND_URL;
 };
 
