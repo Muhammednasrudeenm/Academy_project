@@ -68,12 +68,14 @@ export default function Login() {
       
       // Set debug info for mobile (visible on screen)
       setDebugInfo({
-        apiBase: apiBase,
+        apiBase: cleanBase, // Use cleaned base
         apiUrl: apiUrl,
         origin: window.location.origin,
+        hostname: window.location.hostname,
         userAgent: navigator.userAgent.substring(0, 50) + '...',
         status: 'Connecting...',
-        viteApiUrl: import.meta.env.VITE_API_URL || 'not set'
+        viteApiUrl: import.meta.env.VITE_API_URL || 'not set',
+        isAbsolute: apiUrl.startsWith('http')
       });
       
       // Debug logging for mobile (also visible on screen)
@@ -263,9 +265,15 @@ export default function Login() {
               <div className="text-[13px] text-[#71767a] mb-2 font-bold">Debug Info:</div>
               <div className="space-y-1 text-[12px] text-white">
                 <div><span className="text-[#71767a]">Status:</span> <span className="text-[#1d9bf0]">{debugInfo.status}</span></div>
+                <div><span className="text-[#71767a]">Hostname:</span> <span className="text-[#1d9bf0]">{debugInfo.hostname}</span></div>
                 <div><span className="text-[#71767a]">VITE_API_URL:</span> <span className={debugInfo.viteApiUrl === 'not set' ? 'text-[#f4212e]' : 'text-[#00ba7c]'}>{debugInfo.viteApiUrl || 'not set'}</span></div>
-                <div><span className="text-[#71767a]">API Base:</span> <span className="text-[#00ba7c] break-all">{debugInfo.apiBase}</span></div>
-                <div><span className="text-[#71767a]">API URL:</span> <span className="text-[#00ba7c] break-all">{debugInfo.apiUrl}</span></div>
+                <div><span className="text-[#71767a]">API Base:</span> <span className={debugInfo.apiBase && debugInfo.apiBase.startsWith('http') ? 'text-[#00ba7c]' : 'text-[#f4212e]'} break-all">{debugInfo.apiBase}</span></div>
+                <div><span className="text-[#71767a]">API URL:</span> <span className={debugInfo.isAbsolute ? 'text-[#00ba7c]' : 'text-[#f4212e]'} break-all">{debugInfo.apiUrl}</span></div>
+                {debugInfo.isAbsolute === false && (
+                  <div className="mt-2 p-2 bg-[#f4212e]/20 rounded border border-[#f4212e]/50">
+                    <div className="text-[#f4212e] font-bold text-[11px]">⚠️ ERROR: API URL is not absolute!</div>
+                  </div>
+                )}
                 {debugInfo.healthCheck && (
                   <div><span className="text-[#71767a]">Health:</span> <span className={debugInfo.healthCheck === 'Failed' ? 'text-[#f4212e]' : 'text-[#00ba7c]'}>{debugInfo.healthCheck}</span></div>
                 )}
