@@ -89,7 +89,7 @@ export default function Login() {
       let healthCheckSuccess = false;
       for (let attempt = 0; attempt < 2; attempt++) {
         try {
-          const healthUrl = `${apiBase}/api/health`;
+          const healthUrl = `${cleanBase}/api/health`; // Use cleaned base
           const healthController = new AbortController();
           const healthTimeout = setTimeout(() => healthController.abort(), 15000); // 15 seconds for Render spin-up
           const healthCheck = await fetch(healthUrl, {

@@ -36,15 +36,42 @@ export const fetchAcademies = async (forceRefresh = false) => {
   }
   
   const apiBase = getApiUrl();
-  const res = await fetch(`${apiBase}/api/academies`);
-  if (!res.ok) throw new Error("Failed to fetch academies");
-  const data = await res.json();
+  // Ensure no trailing slash
+  const cleanBase = apiBase.endsWith('/') ? apiBase.slice(0, -1) : apiBase;
   
-  // Cache the result
-  academiesCache = data;
-  cacheTimestamp = Date.now();
-  
-  return data;
+  try {
+    const res = await fetch(`${cleanBase}/api/academies`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+      },
+      mode: 'cors',
+      credentials: 'omit',
+    });
+    
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error('[fetchAcademies] Error:', res.status, errorText);
+      throw new Error(`Failed to fetch academies: ${res.status} ${errorText}`);
+    }
+    
+    const data = await res.json();
+    
+    // Validate response format
+    if (!data || typeof data !== 'object') {
+      console.error('[fetchAcademies] Invalid response format:', data);
+      throw new Error('Invalid response format from server');
+    }
+    
+    // Cache the result
+    academiesCache = data;
+    cacheTimestamp = Date.now();
+    
+    return data;
+  } catch (error) {
+    console.error('[fetchAcademies] Fetch error:', error);
+    throw error;
+  }
 };
 
 // 🟢 Fetch a single academy by ID
