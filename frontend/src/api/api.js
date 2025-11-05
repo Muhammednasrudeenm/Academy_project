@@ -12,21 +12,13 @@ const getApiUrl = () => {
     return 'http://localhost:5000';
   }
   
-  // Priority 3: Production - use direct backend URL for mobile compatibility
-  // Mobile browsers may have issues with Vercel rewrites, so use direct URL
+  // Priority 3: Production - ALWAYS use direct backend URL
+  // Vercel rewrites can fail on mobile, so always use direct URL in production
   const BACKEND_URL = 'https://academy-project-94om.onrender.com';
   
-  // Check if we're on mobile device
-  const isMobile = typeof window !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-  
-  // For mobile or if VITE_API_URL is not set, use direct backend URL
-  if (isMobile || !import.meta.env.VITE_API_URL) {
-    return BACKEND_URL;
-  }
-  
-  // Priority 4: Fallback to empty string for relative URLs (Vercel rewrites)
-  // This works for desktop but mobile may need direct URL
-  return '';
+  // Always use direct backend URL in production (not localhost)
+  // This ensures mobile compatibility and avoids Vercel rewrite issues
+  return BACKEND_URL;
 };
 
 // 🟢 Fetch all academies (with caching)

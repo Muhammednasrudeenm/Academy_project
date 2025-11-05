@@ -35,21 +35,13 @@ export default function Login() {
           return 'http://localhost:5000';
         }
         
-        // Priority 3: Production - use direct backend URL for mobile compatibility
-        // Mobile browsers may have issues with Vercel rewrites, so use direct URL
+        // Priority 3: Production - ALWAYS use direct backend URL
+        // Vercel rewrites can fail on mobile, so always use direct URL in production
         const BACKEND_URL = 'https://academy-project-94om.onrender.com';
         
-        // Check if we're on mobile device
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        
-        // For mobile or if VITE_API_URL is not set, use direct backend URL
-        if (isMobile || !import.meta.env.VITE_API_URL) {
-          return BACKEND_URL;
-        }
-        
-        // Priority 4: Fallback to empty string for relative URLs (Vercel rewrites)
-        // This works for desktop but mobile may need direct URL
-        return '';
+        // Always use direct backend URL in production (not localhost)
+        // This ensures mobile compatibility and avoids Vercel rewrite issues
+        return BACKEND_URL;
       };
       
       const apiBase = getApiUrl();
@@ -59,6 +51,27 @@ export default function Login() {
       console.log('[LOGIN] API Base URL:', apiBase);
       console.log('[LOGIN] Full API URL:', apiUrl);
       console.log('[LOGIN] Current origin:', window.location.origin);
+      console.log('[LOGIN] User Agent:', navigator.userAgent);
+      
+      // Test backend connectivity first (optional health check)
+      try {
+        const healthUrl = `${apiBase}/api/health`;
+        const healthController = new AbortController();
+        const healthTimeout = setTimeout(() => healthController.abort(), 10000);
+        const healthCheck = await fetch(healthUrl, {
+          method: "GET",
+          headers: {
+            "Accept": "application/json",
+          },
+          mode: 'cors',
+          credentials: 'omit',
+          signal: healthController.signal,
+        });
+        clearTimeout(healthTimeout);
+        console.log('[LOGIN] Backend health check:', healthCheck.status);
+      } catch (healthError) {
+        console.warn('[LOGIN] Health check failed (continuing anyway):', healthError.message);
+      }
       
       // Better error handling for mobile fetch issues
       let res;
@@ -82,23 +95,29 @@ export default function Login() {
         clearTimeout(timeoutId);
         
         console.log('[LOGIN] Response status:', res.status);
-        console.log('[LOGIN] Response headers:', [...res.headers.entries()]);
+        console.log('[LOGIN] Response ok:', res.ok);
+        
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error('[LOGIN] Response error:', errorText);
+          throw new Error(`Server error (${res.status}): ${errorText || 'Unknown error'}`);
+        }
       } catch (fetchError) {
         console.error('[LOGIN] Fetch error details:', {
           name: fetchError.name,
           message: fetchError.message,
-          stack: fetchError.stack,
           apiUrl: apiUrl,
           origin: window.location.origin,
+          userAgent: navigator.userAgent,
         });
         
         if (fetchError.name === 'AbortError') {
-          throw new Error('Request timeout. Please check your internet connection.');
+          throw new Error('Request timeout. Please check your internet connection and try again.');
         }
         if (fetchError.message && (fetchError.message.includes('Failed to fetch') || fetchError.message.includes('NetworkError'))) {
-          throw new Error(`Network error: ${apiUrl}. Please check your internet connection. If the problem persists, the backend server may be down or CORS is blocking the request.`);
+          throw new Error(`Cannot connect to server. Please check:\n1. Your internet connection\n2. Backend server is running at ${apiBase}\n3. Try again in a few moments`);
         }
-        throw new Error(`Failed to connect to server: ${fetchError.message || 'Unknown error'}`);
+        throw fetchError;
       }
 
       const data = await res.json();
