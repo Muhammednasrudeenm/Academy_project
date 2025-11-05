@@ -25,48 +25,14 @@ console.log("📦 Routes imported:", {
 
 const app = express();
 
-// CORS configuration for production - VERY PERMISSIVE for mobile compatibility
+// CORS configuration - ALLOWS ALL ORIGINS for production deployment
+// This ensures the API works with any Vercel deployment or frontend URL
 const corsOptions = {
   origin: function (origin, callback) {
-    // In production, allow ALL origins (most permissive for mobile)
-    if (process.env.NODE_ENV === 'production') {
-      console.log(`[CORS] Allowing origin in production: ${origin || 'no origin'}`);
-      return callback(null, true);
-    }
-    
-    // Development: only allow specific origins
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) {
-      console.log(`[CORS] Allowing request with no origin (development)`);
-      return callback(null, true);
-    }
-    
-    const allowedOrigins = [
-      'http://localhost:5173',
-      'http://localhost:5174',
-      'http://localhost:5175',
-      'http://localhost:3000',
-      process.env.FRONTEND_URL,
-      // Allow any localhost port for development
-      /^http:\/\/localhost:\d+$/,
-      // Vercel domains
-      /^https?:\/\/.*\.vercel\.app$/,
-      /^https?:\/\/.*\.vercel\.app\/.*$/,
-      /\.vercel\.app$/,
-      // Netlify domains
-      /\.netlify\.app$/,
-      /^https?:\/\/.*\.netlify\.app$/,
-    ].filter(Boolean);
-    
-    if (allowedOrigins.some(allowed => 
-      typeof allowed === 'string' ? origin === allowed : allowed.test(origin)
-    )) {
-      console.log(`[CORS] Allowing origin: ${origin}`);
-      callback(null, true);
-    } else {
-      console.log(`[CORS] Blocked origin: ${origin}`);
-      callback(new Error('Not allowed by CORS'));
-    }
+    // Always allow all origins (production-ready)
+    // This ensures the API works with any Vercel deployment or frontend URL
+    console.log(`[CORS] Allowing origin: ${origin || 'no origin'}`);
+    callback(null, true);
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
