@@ -8,6 +8,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [debugInfo, setDebugInfo] = useState(null); // For mobile debugging
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -47,7 +48,16 @@ export default function Login() {
       const apiBase = getApiUrl();
       const apiUrl = `${apiBase}/api/users/login`;
       
-      // Debug logging for mobile
+      // Set debug info for mobile (visible on screen)
+      setDebugInfo({
+        apiBase: apiBase,
+        apiUrl: apiUrl,
+        origin: window.location.origin,
+        userAgent: navigator.userAgent.substring(0, 50) + '...',
+        status: 'Connecting...'
+      });
+      
+      // Debug logging for mobile (also visible on screen)
       console.log('[LOGIN] API Base URL:', apiBase);
       console.log('[LOGIN] Full API URL:', apiUrl);
       console.log('[LOGIN] Current origin:', window.location.origin);
@@ -68,8 +78,10 @@ export default function Login() {
           signal: healthController.signal,
         });
         clearTimeout(healthTimeout);
+        setDebugInfo(prev => ({ ...prev, healthCheck: healthCheck.status, status: 'Health check OK' }));
         console.log('[LOGIN] Backend health check:', healthCheck.status);
       } catch (healthError) {
+        setDebugInfo(prev => ({ ...prev, healthCheck: 'Failed', healthError: healthError.message }));
         console.warn('[LOGIN] Health check failed (continuing anyway):', healthError.message);
       }
       
@@ -79,6 +91,8 @@ export default function Login() {
         // Create abort controller for timeout (better browser compatibility)
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+        
+        setDebugInfo(prev => ({ ...prev, status: 'Sending login request...' }));
         
         res = await fetch(apiUrl, {
           method: "POST",
@@ -94,22 +108,34 @@ export default function Login() {
         
         clearTimeout(timeoutId);
         
+        setDebugInfo(prev => ({ ...prev, responseStatus: res.status, responseOk: res.ok }));
         console.log('[LOGIN] Response status:', res.status);
         console.log('[LOGIN] Response ok:', res.ok);
         
         if (!res.ok) {
           const errorText = await res.text();
+          setDebugInfo(prev => ({ ...prev, status: `Error: ${res.status}`, error: errorText }));
           console.error('[LOGIN] Response error:', errorText);
           throw new Error(`Server error (${res.status}): ${errorText || 'Unknown error'}`);
         }
+        
+        setDebugInfo(prev => ({ ...prev, status: 'Success! Processing response...' }));
       } catch (fetchError) {
-        console.error('[LOGIN] Fetch error details:', {
+        const errorDetails = {
           name: fetchError.name,
           message: fetchError.message,
           apiUrl: apiUrl,
           origin: window.location.origin,
-          userAgent: navigator.userAgent,
-        });
+        };
+        
+        setDebugInfo(prev => ({ 
+          ...prev, 
+          status: 'ERROR', 
+          error: `${fetchError.name}: ${fetchError.message}`,
+          errorDetails: JSON.stringify(errorDetails, null, 2)
+        }));
+        
+        console.error('[LOGIN] Fetch error details:', errorDetails);
         
         if (fetchError.name === 'AbortError') {
           throw new Error('Request timeout. Please check your internet connection and try again.');
@@ -118,6 +144,9 @@ export default function Login() {
           throw new Error(`Cannot connect to server. Please check:\n1. Your internet connection\n2. Backend server is running at ${apiBase}\n3. Try again in a few moments`);
         }
         throw fetchError;
+      } finally {
+        // Clear debug info after a delay
+        setTimeout(() => setDebugInfo(null), 5000);
       }
 
       const data = await res.json();
@@ -128,10 +157,12 @@ export default function Login() {
 
       // ✅ Save user in localStorage
       localStorage.setItem("user", JSON.stringify(data.data));
+      setDebugInfo(prev => ({ ...prev, status: 'Login successful! Redirecting...' }));
       setSuccess(true);
 
       // ✅ Redirect immediately using React Router (no page reload, much faster!)
       setTimeout(() => {
+        setDebugInfo(null); // Clear debug info before redirect
         navigate("/", { replace: true });
       }, 300); // Reduced from 1000ms to 300ms
     } catch (err) {
@@ -171,6 +202,29 @@ export default function Login() {
           {error && (
             <div className="mb-4 p-3 rounded-lg bg-[#16181c] border border-[#f4212e]">
               <p className="text-[#f4212e]">{error}</p>
+            </div>
+          )}
+
+          {/* Debug Info Panel - Visible on screen for mobile debugging */}
+          {debugInfo && (
+            <div className="mb-4 p-3 rounded-lg bg-[#16181c] border border-[#2f3336] text-left">
+              <div className="text-[13px] text-[#71767a] mb-2 font-bold">Debug Info:</div>
+              <div className="space-y-1 text-[12px] text-white">
+                <div><span className="text-[#71767a]">Status:</span> <span className="text-[#1d9bf0]">{debugInfo.status}</span></div>
+                <div><span className="text-[#71767a]">API URL:</span> <span className="text-[#00ba7c] break-all">{debugInfo.apiUrl}</span></div>
+                {debugInfo.healthCheck && (
+                  <div><span className="text-[#71767a]">Health:</span> <span className={debugInfo.healthCheck === 'Failed' ? 'text-[#f4212e]' : 'text-[#00ba7c]'}>{debugInfo.healthCheck}</span></div>
+                )}
+                {debugInfo.responseStatus && (
+                  <div><span className="text-[#71767a]">Response:</span> <span className={debugInfo.responseOk ? 'text-[#00ba7c]' : 'text-[#f4212e]'}>{debugInfo.responseStatus} {debugInfo.responseOk ? 'OK' : 'ERROR'}</span></div>
+                )}
+                {debugInfo.error && (
+                  <div className="mt-2 p-2 bg-black/50 rounded border border-[#f4212e]/50">
+                    <div className="text-[#f4212e] font-bold mb-1">Error:</div>
+                    <div className="text-[#f4212e] break-words">{debugInfo.error}</div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
