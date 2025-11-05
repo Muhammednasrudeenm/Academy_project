@@ -296,6 +296,12 @@ export default function Login() {
                     <div className="text-[#f4212e] font-bold text-[11px]">⚠️ ERROR: API URL is not absolute!</div>
                   </div>
                 )}
+                {debugInfo.hasDoubleSlash && (
+                  <div className="mt-2 p-2 bg-[#f4212e]/20 rounded border border-[#f4212e]/50">
+                    <div className="text-[#f4212e] font-bold text-[11px]">⚠️ ERROR: Double slash detected in URL!</div>
+                    <div className="text-[#f4212e] text-[10px] mt-1 break-all">{debugInfo.apiUrl}</div>
+                  </div>
+                )}
                 {debugInfo.healthCheck && (
                   <div><span className="text-[#71767a]">Health:</span> <span className={debugInfo.healthCheck === 'Failed' ? 'text-[#f4212e]' : 'text-[#00ba7c]'}>{debugInfo.healthCheck}</span></div>
                 )}
