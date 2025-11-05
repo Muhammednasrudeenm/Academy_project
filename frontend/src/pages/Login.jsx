@@ -136,11 +136,32 @@ export default function Login() {
           
           setDebugInfo(prev => ({ ...prev, status: attempt === 0 ? 'Sending login request...' : `Retrying login request (attempt ${attempt + 1})...` }));
           
+          // CRITICAL: Final runtime validation before fetch
+          // This is the absolute last check before making the request
+          if (!apiUrl || typeof apiUrl !== 'string') {
+            console.error('[LOGIN] CRITICAL: apiUrl is not a string!', typeof apiUrl, apiUrl);
+            throw new Error('API URL is invalid before fetch');
+          }
+          
+          if (apiUrl.trim() === '' || apiUrl === '//api/users/login') {
+            console.error('[LOGIN] CRITICAL: apiUrl is empty or relative!', apiUrl);
+            throw new Error(`API URL is empty or relative: ${apiUrl}`);
+          }
+          
+          if (!apiUrl.startsWith('https://academy-project-94om.onrender.com')) {
+            console.error('[LOGIN] CRITICAL: apiUrl is not using Render backend!', apiUrl);
+            console.error('[LOGIN] Expected to start with: https://academy-project-94om.onrender.com');
+            console.error('[LOGIN] Actual URL:', apiUrl);
+            throw new Error(`API URL is not using correct backend. Got: ${apiUrl}`);
+          }
+          
           console.log('[LOGIN] Attempting fetch:', {
             url: apiUrl,
             method: 'POST',
             attempt: attempt + 1,
-            maxRetries: maxRetries
+            maxRetries: maxRetries,
+            urlLength: apiUrl.length,
+            urlStartsWith: apiUrl.substring(0, 40)
           });
           
           res = await fetch(apiUrl, {
