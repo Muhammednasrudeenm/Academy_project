@@ -267,8 +267,8 @@ export default function Login() {
                 <div><span className="text-[#71767a]">Status:</span> <span className="text-[#1d9bf0]">{debugInfo.status}</span></div>
                 <div><span className="text-[#71767a]">Hostname:</span> <span className="text-[#1d9bf0]">{debugInfo.hostname}</span></div>
                 <div><span className="text-[#71767a]">VITE_API_URL:</span> <span className={debugInfo.viteApiUrl === 'not set' ? 'text-[#f4212e]' : 'text-[#00ba7c]'}>{debugInfo.viteApiUrl || 'not set'}</span></div>
-                <div><span className="text-[#71767a]">API Base:</span> <span className={debugInfo.apiBase && debugInfo.apiBase.startsWith('http') ? 'text-[#00ba7c]' : 'text-[#f4212e]'} break-all">{debugInfo.apiBase}</span></div>
-                <div><span className="text-[#71767a]">API URL:</span> <span className={debugInfo.isAbsolute ? 'text-[#00ba7c]' : 'text-[#f4212e]'} break-all">{debugInfo.apiUrl}</span></div>
+                <div><span className="text-[#71767a]">API Base:</span> <span className={`${debugInfo.apiBase && debugInfo.apiBase.startsWith('http') ? 'text-[#00ba7c]' : 'text-[#f4212e]'} break-all`}>{debugInfo.apiBase}</span></div>
+                <div><span className="text-[#71767a]">API URL:</span> <span className={`${debugInfo.isAbsolute ? 'text-[#00ba7c]' : 'text-[#f4212e]'} break-all`}>{debugInfo.apiUrl}</span></div>
                 {debugInfo.isAbsolute === false && (
                   <div className="mt-2 p-2 bg-[#f4212e]/20 rounded border border-[#f4212e]/50">
                     <div className="text-[#f4212e] font-bold text-[11px]">⚠️ ERROR: API URL is not absolute!</div>
