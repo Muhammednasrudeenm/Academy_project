@@ -86,12 +86,13 @@ export default function Login() {
       console.log('[LOGIN] ===========================');
       
       // Test backend connectivity first (with retry for Render spin-down)
+      // Note: Health check is optional - we'll continue even if it fails
       let healthCheckSuccess = false;
       for (let attempt = 0; attempt < 2; attempt++) {
         try {
-          const healthUrl = `${finalBase}/api/health`; // Use final base
+          const healthUrl = `${finalBase}/api/health`;
           const healthController = new AbortController();
-          const healthTimeout = setTimeout(() => healthController.abort(), 15000); // 15 seconds for Render spin-up
+          const healthTimeout = setTimeout(() => healthController.abort(), 30000); // 30 seconds for Render spin-up
           const healthCheck = await fetch(healthUrl, {
             method: "GET",
             headers: {
@@ -99,25 +100,33 @@ export default function Login() {
             },
             mode: 'cors',
             credentials: 'omit',
+            cache: 'no-cache',
             signal: healthController.signal,
           });
           clearTimeout(healthTimeout);
           if (healthCheck.ok) {
             setDebugInfo(prev => ({ ...prev, healthCheck: healthCheck.status, status: 'Health check OK' }));
             healthCheckSuccess = true;
-            console.log('[LOGIN] Backend health check:', healthCheck.status);
+            console.log('[LOGIN] Backend health check successful:', healthCheck.status);
             break;
           }
         } catch (healthError) {
           if (attempt === 0) {
-            setDebugInfo(prev => ({ ...prev, healthCheck: 'Retrying...', status: 'Backend may be spinning up, retrying...' }));
+            setDebugInfo(prev => ({ ...prev, healthCheck: 'Retrying...', status: 'Backend may be spinning up, retrying health check...' }));
             console.warn('[LOGIN] Health check failed, retrying (Render may be spinning up):', healthError.message);
-            await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds before retry
+            await new Promise(resolve => setTimeout(resolve, 3000)); // Wait 3 seconds before retry
           } else {
-            setDebugInfo(prev => ({ ...prev, healthCheck: 'Failed', healthError: healthError.message }));
-            console.warn('[LOGIN] Health check failed after retry:', healthError.message);
+            setDebugInfo(prev => ({ ...prev, healthCheck: 'Failed (continuing anyway)', healthError: healthError.message }));
+            console.warn('[LOGIN] Health check failed after retry, but continuing with login attempt:', healthError.message);
           }
         }
+      }
+      
+      // Log health check result
+      if (healthCheckSuccess) {
+        console.log('[LOGIN] Backend is reachable, proceeding with login...');
+      } else {
+        console.warn('[LOGIN] Backend health check failed, but attempting login anyway (backend may be spinning up)...');
       }
       
       // Better error handling for mobile fetch issues with retry for Render spin-down
@@ -134,10 +143,17 @@ export default function Login() {
           
           // Create abort controller for timeout (better browser compatibility)
           const controller = new AbortController();
-          // Increased timeout for Render free tier spin-up (can take 30+ seconds)
-          const timeoutId = setTimeout(() => controller.abort(), 45000); // 45 second timeout
+          // Increased timeout for Render free tier spin-up (can take 60+ seconds on first request)
+          const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
           
           setDebugInfo(prev => ({ ...prev, status: attempt === 0 ? 'Sending login request...' : `Retrying login request (attempt ${attempt + 1})...` }));
+          
+          console.log('[LOGIN] Attempting fetch:', {
+            url: apiUrl,
+            method: 'POST',
+            attempt: attempt + 1,
+            maxRetries: maxRetries
+          });
           
           res = await fetch(apiUrl, {
             method: "POST",
@@ -149,6 +165,8 @@ export default function Login() {
             signal: controller.signal,
             mode: 'cors', // Explicitly set CORS mode
             credentials: 'omit', // Don't send credentials to avoid CORS issues
+            cache: 'no-cache', // Prevent caching issues
+            redirect: 'follow', // Follow redirects
           });
           
           clearTimeout(timeoutId);
@@ -173,28 +191,35 @@ export default function Login() {
             message: fetchError.message,
             apiUrl: apiUrl,
             origin: window.location.origin,
+            attempt: attempt + 1,
+            maxRetries: maxRetries
           };
           
           setDebugInfo(prev => ({ 
             ...prev, 
             status: attempt === maxRetries - 1 ? 'ERROR' : `Retrying... (${fetchError.message})`, 
             error: `${fetchError.name}: ${fetchError.message}`,
-            errorDetails: JSON.stringify(errorDetails, null, 2)
+            errorDetails: JSON.stringify(errorDetails, null, 2),
+            networkError: true
           }));
           
           console.error('[LOGIN] Fetch error details:', errorDetails);
+          console.error('[LOGIN] Error type:', fetchError.name);
+          console.error('[LOGIN] Error message:', fetchError.message);
+          console.error('[LOGIN] Error stack:', fetchError.stack);
           
           lastError = fetchError;
           
           if (attempt === maxRetries - 1) {
-            // Last attempt failed, throw error
+            // Last attempt failed, throw error with helpful message
             if (fetchError.name === 'AbortError') {
-              throw new Error('Request timeout. Please check your internet connection and try again. Render backend may be spinning up (takes ~30 seconds).');
+              throw new Error('Request timeout after 60 seconds. The Render backend may be spinning up (first request can take up to 60 seconds). Please try again in a few moments.');
             }
-            if (fetchError.message && (fetchError.message.includes('Failed to fetch') || fetchError.message.includes('NetworkError'))) {
-              throw new Error(`Cannot connect to server. Please check:\n1. Your internet connection\n2. Backend server is running at ${apiBase}\n3. Render backend may be spinning up (wait 30 seconds and try again)`);
+            if (fetchError.name === 'TypeError' && (fetchError.message.includes('Failed to fetch') || fetchError.message.includes('NetworkError') || fetchError.message.includes('Load failed'))) {
+              throw new Error(`Network error: Cannot connect to backend server.\n\nPossible causes:\n1. Render backend is spinning up (wait 60 seconds and retry)\n2. Backend server is down\n3. Network connectivity issue\n\nBackend URL: ${finalBase}\n\nPlease wait a moment and try again.`);
             }
-            throw fetchError;
+            // Generic error
+            throw new Error(`Connection failed: ${fetchError.message || 'Unknown network error'}. Please check your internet connection and try again.`);
           }
         }
       }
