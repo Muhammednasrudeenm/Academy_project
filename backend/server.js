@@ -91,6 +91,9 @@ app.use("/api/posts", (req, res, next) => {
 // Debug: Log all requests to /api/users BEFORE routing
 app.use("/api/users", (req, res, next) => {
   console.log(`[DEBUG USERS] ${req.method} ${req.originalUrl}`);
+  console.log(`[DEBUG USERS] Request path: ${req.path}`);
+  console.log(`[DEBUG USERS] Request baseUrl: ${req.baseUrl}`);
+  console.log(`[DEBUG USERS] Request originalUrl: ${req.originalUrl}`);
   next();
 });
 
@@ -112,11 +115,23 @@ console.log("  - /api/posts:", !!postRoutes);
 console.log("  - /api/academies:", !!academyRoutes);
 console.log("  - /api/upload:", !!uploadRoutes);
 console.log("  - /api/users:", !!userRoutes);
+console.log("  - userRoutes type:", typeof userRoutes);
+console.log("  - userRoutes keys:", userRoutes ? Object.keys(userRoutes) : 'null');
 
+// Register routes
 app.use("/api/posts", postRoutes);
 app.use("/api/academies", academyRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/users", userRoutes);
+
+// Test endpoint to verify userRoutes is working
+app.get("/api/users/test", (req, res) => {
+  res.json({ 
+    message: "User routes are working! ✅",
+    timestamp: new Date().toISOString(),
+    userRoutesLoaded: !!userRoutes
+  });
+});
 
 // 🧪 Firebase Test Routes (for testing only - can remove later)
 app.use("/api/firebase-test", firebaseTestRoutes);
