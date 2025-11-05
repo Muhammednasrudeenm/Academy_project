@@ -122,6 +122,12 @@ app.use("/api/posts", (req, res, next) => {
   next();
 });
 
+// Debug: Log all requests to /api/users BEFORE routing
+app.use("/api/users", (req, res, next) => {
+  console.log(`[DEBUG USERS] ${req.method} ${req.originalUrl}`);
+  next();
+});
+
 // TEMPORARY: Direct route for testing delete post
 app.delete("/api/posts/remove/:postId", async (req, res) => {
   console.log(`[DIRECT ROUTE] Delete post called: ${req.params.postId}`);
@@ -133,6 +139,13 @@ app.delete("/api/posts/remove/:postId", async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 });
+
+// Verify routes are loaded
+console.log("✅ Routes being registered:");
+console.log("  - /api/posts:", !!postRoutes);
+console.log("  - /api/academies:", !!academyRoutes);
+console.log("  - /api/upload:", !!uploadRoutes);
+console.log("  - /api/users:", !!userRoutes);
 
 app.use("/api/posts", postRoutes);
 app.use("/api/academies", academyRoutes);
