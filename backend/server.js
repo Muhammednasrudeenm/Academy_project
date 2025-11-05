@@ -77,6 +77,10 @@ const corsOptions = {
 
 // Use CORS with options
 app.use(cors(corsOptions));
+
+// Handle preflight OPTIONS requests explicitly for mobile
+app.options('*', cors(corsOptions));
+
 app.use(express.json());
 
 // ✅ Basic health check
