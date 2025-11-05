@@ -139,7 +139,16 @@ app.use("/api/firebase-test", firebaseTestRoutes);
 // ✅ Fallback for undefined routes
 app.use((req, res) => {
   console.log(`[404] Route not found: ${req.method} ${req.originalUrl}`);
-  res.status(404).json({ message: "Route not found 🚫" });
+  console.log(`[404] Request path: ${req.path}`);
+  console.log(`[404] Request baseUrl: ${req.baseUrl}`);
+  console.log(`[404] Registered routes: /api/posts, /api/academies, /api/upload, /api/users, /api/health, /api/debug`);
+  res.status(404).json({ 
+    message: "Route not found 🚫",
+    method: req.method,
+    path: req.path,
+    originalUrl: req.originalUrl,
+    hint: "Check if the route is registered correctly"
+  });
 });
 
 const PORT = process.env.PORT || 5000;
