@@ -56,99 +56,133 @@ export default function Login() {
         apiUrl: apiUrl,
         origin: window.location.origin,
         userAgent: navigator.userAgent.substring(0, 50) + '...',
-        status: 'Connecting...'
+        status: 'Connecting...',
+        viteApiUrl: import.meta.env.VITE_API_URL || 'not set'
       });
       
       // Debug logging for mobile (also visible on screen)
       console.log('[LOGIN] API Base URL:', apiBase);
       console.log('[LOGIN] Full API URL:', apiUrl);
       console.log('[LOGIN] Current origin:', window.location.origin);
+      console.log('[LOGIN] VITE_API_URL:', import.meta.env.VITE_API_URL || 'not set');
       console.log('[LOGIN] User Agent:', navigator.userAgent);
       
-      // Test backend connectivity first (optional health check)
-      try {
-        const healthUrl = `${apiBase}/api/health`;
-        const healthController = new AbortController();
-        const healthTimeout = setTimeout(() => healthController.abort(), 10000);
-        const healthCheck = await fetch(healthUrl, {
-          method: "GET",
-          headers: {
-            "Accept": "application/json",
-          },
-          mode: 'cors',
-          credentials: 'omit',
-          signal: healthController.signal,
-        });
-        clearTimeout(healthTimeout);
-        setDebugInfo(prev => ({ ...prev, healthCheck: healthCheck.status, status: 'Health check OK' }));
-        console.log('[LOGIN] Backend health check:', healthCheck.status);
-      } catch (healthError) {
-        setDebugInfo(prev => ({ ...prev, healthCheck: 'Failed', healthError: healthError.message }));
-        console.warn('[LOGIN] Health check failed (continuing anyway):', healthError.message);
+      // Test backend connectivity first (with retry for Render spin-down)
+      let healthCheckSuccess = false;
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          const healthUrl = `${apiBase}/api/health`;
+          const healthController = new AbortController();
+          const healthTimeout = setTimeout(() => healthController.abort(), 15000); // 15 seconds for Render spin-up
+          const healthCheck = await fetch(healthUrl, {
+            method: "GET",
+            headers: {
+              "Accept": "application/json",
+            },
+            mode: 'cors',
+            credentials: 'omit',
+            signal: healthController.signal,
+          });
+          clearTimeout(healthTimeout);
+          if (healthCheck.ok) {
+            setDebugInfo(prev => ({ ...prev, healthCheck: healthCheck.status, status: 'Health check OK' }));
+            healthCheckSuccess = true;
+            console.log('[LOGIN] Backend health check:', healthCheck.status);
+            break;
+          }
+        } catch (healthError) {
+          if (attempt === 0) {
+            setDebugInfo(prev => ({ ...prev, healthCheck: 'Retrying...', status: 'Backend may be spinning up, retrying...' }));
+            console.warn('[LOGIN] Health check failed, retrying (Render may be spinning up):', healthError.message);
+            await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds before retry
+          } else {
+            setDebugInfo(prev => ({ ...prev, healthCheck: 'Failed', healthError: healthError.message }));
+            console.warn('[LOGIN] Health check failed after retry:', healthError.message);
+          }
+        }
       }
       
-      // Better error handling for mobile fetch issues
+      // Better error handling for mobile fetch issues with retry for Render spin-down
       let res;
-      try {
-        // Create abort controller for timeout (better browser compatibility)
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
-        
-        setDebugInfo(prev => ({ ...prev, status: 'Sending login request...' }));
-        
-        res = await fetch(apiUrl, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Accept": "application/json",
-          },
-          body: JSON.stringify({ name, email }),
-          signal: controller.signal,
-          mode: 'cors', // Explicitly set CORS mode
-          credentials: 'omit', // Don't send credentials to avoid CORS issues
-        });
-        
-        clearTimeout(timeoutId);
-        
-        setDebugInfo(prev => ({ ...prev, responseStatus: res.status, responseOk: res.ok }));
-        console.log('[LOGIN] Response status:', res.status);
-        console.log('[LOGIN] Response ok:', res.ok);
-        
-        if (!res.ok) {
-          const errorText = await res.text();
-          setDebugInfo(prev => ({ ...prev, status: `Error: ${res.status}`, error: errorText }));
-          console.error('[LOGIN] Response error:', errorText);
-          throw new Error(`Server error (${res.status}): ${errorText || 'Unknown error'}`);
+      const maxRetries = 2;
+      let lastError = null;
+      
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+          if (attempt > 0) {
+            setDebugInfo(prev => ({ ...prev, status: `Retrying login (attempt ${attempt + 1}/${maxRetries})...` }));
+            await new Promise(resolve => setTimeout(resolve, 3000)); // Wait 3 seconds before retry
+          }
+          
+          // Create abort controller for timeout (better browser compatibility)
+          const controller = new AbortController();
+          // Increased timeout for Render free tier spin-up (can take 30+ seconds)
+          const timeoutId = setTimeout(() => controller.abort(), 45000); // 45 second timeout
+          
+          setDebugInfo(prev => ({ ...prev, status: attempt === 0 ? 'Sending login request...' : `Retrying login request (attempt ${attempt + 1})...` }));
+          
+          res = await fetch(apiUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Accept": "application/json",
+            },
+            body: JSON.stringify({ name, email }),
+            signal: controller.signal,
+            mode: 'cors', // Explicitly set CORS mode
+            credentials: 'omit', // Don't send credentials to avoid CORS issues
+          });
+          
+          clearTimeout(timeoutId);
+          
+          setDebugInfo(prev => ({ ...prev, responseStatus: res.status, responseOk: res.ok }));
+          console.log('[LOGIN] Response status:', res.status);
+          console.log('[LOGIN] Response ok:', res.ok);
+          
+          if (!res.ok) {
+            const errorText = await res.text();
+            setDebugInfo(prev => ({ ...prev, status: `Error: ${res.status}`, error: errorText }));
+            console.error('[LOGIN] Response error:', errorText);
+            throw new Error(`Server error (${res.status}): ${errorText || 'Unknown error'}`);
+          }
+          
+          setDebugInfo(prev => ({ ...prev, status: 'Success! Processing response...' }));
+          break; // Success, exit retry loop
+          
+        } catch (fetchError) {
+          const errorDetails = {
+            name: fetchError.name,
+            message: fetchError.message,
+            apiUrl: apiUrl,
+            origin: window.location.origin,
+          };
+          
+          setDebugInfo(prev => ({ 
+            ...prev, 
+            status: attempt === maxRetries - 1 ? 'ERROR' : `Retrying... (${fetchError.message})`, 
+            error: `${fetchError.name}: ${fetchError.message}`,
+            errorDetails: JSON.stringify(errorDetails, null, 2)
+          }));
+          
+          console.error('[LOGIN] Fetch error details:', errorDetails);
+          
+          lastError = fetchError;
+          
+          if (attempt === maxRetries - 1) {
+            // Last attempt failed, throw error
+            if (fetchError.name === 'AbortError') {
+              throw new Error('Request timeout. Please check your internet connection and try again. Render backend may be spinning up (takes ~30 seconds).');
+            }
+            if (fetchError.message && (fetchError.message.includes('Failed to fetch') || fetchError.message.includes('NetworkError'))) {
+              throw new Error(`Cannot connect to server. Please check:\n1. Your internet connection\n2. Backend server is running at ${apiBase}\n3. Render backend may be spinning up (wait 30 seconds and try again)`);
+            }
+            throw fetchError;
+          }
         }
-        
-        setDebugInfo(prev => ({ ...prev, status: 'Success! Processing response...' }));
-      } catch (fetchError) {
-        const errorDetails = {
-          name: fetchError.name,
-          message: fetchError.message,
-          apiUrl: apiUrl,
-          origin: window.location.origin,
-        };
-        
-        setDebugInfo(prev => ({ 
-          ...prev, 
-          status: 'ERROR', 
-          error: `${fetchError.name}: ${fetchError.message}`,
-          errorDetails: JSON.stringify(errorDetails, null, 2)
-        }));
-        
-        console.error('[LOGIN] Fetch error details:', errorDetails);
-        
-        if (fetchError.name === 'AbortError') {
-          throw new Error('Request timeout. Please check your internet connection and try again.');
-        }
-        if (fetchError.message && (fetchError.message.includes('Failed to fetch') || fetchError.message.includes('NetworkError'))) {
-          throw new Error(`Cannot connect to server. Please check:\n1. Your internet connection\n2. Backend server is running at ${apiBase}\n3. Try again in a few moments`);
-        }
-        throw fetchError;
-      } finally {
-        // Clear debug info after a delay
-        setTimeout(() => setDebugInfo(null), 5000);
+      }
+      
+      if (!res) {
+        throw lastError || new Error('Request failed after retries');
       }
 
       const data = await res.json();
@@ -213,6 +247,8 @@ export default function Login() {
               <div className="text-[13px] text-[#71767a] mb-2 font-bold">Debug Info:</div>
               <div className="space-y-1 text-[12px] text-white">
                 <div><span className="text-[#71767a]">Status:</span> <span className="text-[#1d9bf0]">{debugInfo.status}</span></div>
+                <div><span className="text-[#71767a]">VITE_API_URL:</span> <span className={debugInfo.viteApiUrl === 'not set' ? 'text-[#f4212e]' : 'text-[#00ba7c]'}>{debugInfo.viteApiUrl || 'not set'}</span></div>
+                <div><span className="text-[#71767a]">API Base:</span> <span className="text-[#00ba7c] break-all">{debugInfo.apiBase}</span></div>
                 <div><span className="text-[#71767a]">API URL:</span> <span className="text-[#00ba7c] break-all">{debugInfo.apiUrl}</span></div>
                 {debugInfo.healthCheck && (
                   <div><span className="text-[#71767a]">Health:</span> <span className={debugInfo.healthCheck === 'Failed' ? 'text-[#f4212e]' : 'text-[#00ba7c]'}>{debugInfo.healthCheck}</span></div>
