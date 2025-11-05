@@ -50,6 +50,11 @@ export default function Login() {
       const apiBase = getApiUrl();
       const apiUrl = `${apiBase}/api/users/login`;
       
+      // Debug logging for mobile
+      console.log('[LOGIN] API Base URL:', apiBase);
+      console.log('[LOGIN] Full API URL:', apiUrl);
+      console.log('[LOGIN] Current origin:', window.location.origin);
+      
       // Better error handling for mobile fetch issues
       let res;
       try {
@@ -61,19 +66,32 @@ export default function Login() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "Accept": "application/json",
           },
           body: JSON.stringify({ name, email }),
           signal: controller.signal,
+          mode: 'cors', // Explicitly set CORS mode
+          credentials: 'omit', // Don't send credentials to avoid CORS issues
         });
         
         clearTimeout(timeoutId);
+        
+        console.log('[LOGIN] Response status:', res.status);
+        console.log('[LOGIN] Response headers:', [...res.headers.entries()]);
       } catch (fetchError) {
-        console.error('Fetch error:', fetchError);
+        console.error('[LOGIN] Fetch error details:', {
+          name: fetchError.name,
+          message: fetchError.message,
+          stack: fetchError.stack,
+          apiUrl: apiUrl,
+          origin: window.location.origin,
+        });
+        
         if (fetchError.name === 'AbortError') {
           throw new Error('Request timeout. Please check your internet connection.');
         }
         if (fetchError.message && (fetchError.message.includes('Failed to fetch') || fetchError.message.includes('NetworkError'))) {
-          throw new Error('Network error. Please check your internet connection and try again. If the problem persists, ensure VITE_API_URL is set in your deployment settings.');
+          throw new Error(`Network error: ${apiUrl}. Please check your internet connection. If the problem persists, the backend server may be down or CORS is blocking the request.`);
         }
         throw new Error(`Failed to connect to server: ${fetchError.message || 'Unknown error'}`);
       }

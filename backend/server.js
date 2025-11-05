@@ -25,11 +25,21 @@ console.log("📦 Routes imported:", {
 
 const app = express();
 
-// CORS configuration for production
+// CORS configuration for production - VERY PERMISSIVE for mobile compatibility
 const corsOptions = {
   origin: function (origin, callback) {
+    // In production, allow ALL origins (most permissive for mobile)
+    if (process.env.NODE_ENV === 'production') {
+      console.log(`[CORS] Allowing origin in production: ${origin || 'no origin'}`);
+      return callback(null, true);
+    }
+    
+    // Development: only allow specific origins
     // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
+    if (!origin) {
+      console.log(`[CORS] Allowing request with no origin (development)`);
+      return callback(null, true);
+    }
     
     const allowedOrigins = [
       'http://localhost:5173',
@@ -39,34 +49,30 @@ const corsOptions = {
       process.env.FRONTEND_URL,
       // Allow any localhost port for development
       /^http:\/\/localhost:\d+$/,
-      // Vercel domains - more flexible matching for mobile
+      // Vercel domains
       /^https?:\/\/.*\.vercel\.app$/,
       /^https?:\/\/.*\.vercel\.app\/.*$/,
       /\.vercel\.app$/,
       // Netlify domains
       /\.netlify\.app$/,
       /^https?:\/\/.*\.netlify\.app$/,
-      // Allow any HTTPS origin in production (more permissive for mobile)
-      ...(process.env.NODE_ENV === 'production' ? [/^https:\/\/.+/] : []),
     ].filter(Boolean);
-    
-    // More permissive: if no specific match but it's HTTPS, allow it in production
-    if (process.env.NODE_ENV === 'production' && origin.startsWith('https://')) {
-      return callback(null, true);
-    }
     
     if (allowedOrigins.some(allowed => 
       typeof allowed === 'string' ? origin === allowed : allowed.test(origin)
     )) {
+      console.log(`[CORS] Allowing origin: ${origin}`);
       callback(null, true);
     } else {
-      console.log(`CORS blocked origin: ${origin}`);
+      console.log(`[CORS] Blocked origin: ${origin}`);
       callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  exposedHeaders: ['Content-Length', 'Content-Type'],
+  maxAge: 86400, // 24 hours
 };
 
 // Use CORS with options
@@ -75,12 +81,34 @@ app.use(express.json());
 
 // ✅ Basic health check
 app.get("/", (req, res) => {
-  res.send("🏆 Sports Academy API Running ✅");
+  res.json({ 
+    message: "🏆 Sports Academy API Running ✅",
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    corsEnabled: true
+  });
 });
 
 // ✅ Debug route (to confirm server is alive)
 app.get("/api/debug", (req, res) => {
-  res.json({ message: "Server routes working fine ✅" });
+  res.json({ 
+    message: "Server routes working fine ✅",
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    origin: req.headers.origin || 'no origin',
+    corsAllowed: true
+  });
+});
+
+// ✅ Health check endpoint for mobile testing
+app.get("/api/health", (req, res) => {
+  res.json({
+    status: "healthy",
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    cors: "enabled",
+    message: "Backend is accessible"
+  });
 });
 
 // ✅ Correct route prefixes
