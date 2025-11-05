@@ -149,6 +149,21 @@ app.get("/api/users/test", (req, res) => {
   });
 });
 
+// Direct login endpoint for testing (bypasses router to verify CORS/body parsing)
+app.post("/api/users/login-direct", async (req, res) => {
+  console.log('[DIRECT LOGIN] Request received');
+  console.log('[DIRECT LOGIN] Request body:', req.body);
+  console.log('[DIRECT LOGIN] Request headers:', req.headers);
+  
+  try {
+    const { loginUser } = await import("./controllers/userControllerFirestore.js");
+    return loginUser(req, res);
+  } catch (err) {
+    console.error('[DIRECT LOGIN] Error:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // 🧪 Firebase Test Routes (for testing only - can remove later)
 app.use("/api/firebase-test", firebaseTestRoutes);
 
