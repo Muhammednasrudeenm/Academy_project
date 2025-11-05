@@ -35,15 +35,20 @@ export default function Login() {
           return 'http://localhost:5000';
         }
         
-        // Priority 3: Production - check if we have a backend URL from environment
-        // If not, try to use relative URLs (Vercel rewrites) but with better error handling
-        const backendUrl = import.meta.env.VITE_API_URL || process.env.VITE_API_URL;
-        if (backendUrl) {
-          return backendUrl;
+        // Priority 3: Production - use direct backend URL for mobile compatibility
+        // Mobile browsers may have issues with Vercel rewrites, so use direct URL
+        const BACKEND_URL = 'https://academy-project-94om.onrender.com';
+        
+        // Check if we're on mobile device
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        // For mobile or if VITE_API_URL is not set, use direct backend URL
+        if (isMobile || !import.meta.env.VITE_API_URL) {
+          return BACKEND_URL;
         }
         
         // Priority 4: Fallback to empty string for relative URLs (Vercel rewrites)
-        // This will work if Vercel rewrites are configured correctly
+        // This works for desktop but mobile may need direct URL
         return '';
       };
       
