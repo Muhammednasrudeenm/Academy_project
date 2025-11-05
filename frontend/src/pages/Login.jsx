@@ -25,26 +25,17 @@ export default function Login() {
       // Smart API URL resolver: uses VITE_API_URL environment variable first,
       // then falls back based on environment
       // DEFINITIVE BACKEND URL - NEVER CHANGE THIS - HARDCODED TO PREVENT ANY ISSUES
+      // This is the Render backend URL that serves the API
       const BACKEND_URL = 'https://academy-project-94om.onrender.com';
       
-      // CRITICAL: Always use direct backend URL in production
-      // NEVER rely on environment variables or relative URLs
-      let apiBase;
-      if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-        // Local development only
-        apiBase = 'http://localhost:5000';
-      } else {
-        // Production: ALWAYS use direct backend URL
-        apiBase = BACKEND_URL;
-      }
+      // ALWAYS use production backend URL
+      // Removed localhost checks to ensure consistent behavior across all Vercel deployments
+      const apiBase = BACKEND_URL;
       
       // CRITICAL: Validate apiBase is never empty or undefined
       if (!apiBase || typeof apiBase !== 'string' || apiBase.trim() === '') {
         console.error('[LOGIN] CRITICAL: apiBase is invalid!', apiBase);
-        console.error('[LOGIN] window.location:', window.location);
-        console.error('[LOGIN] VITE_API_URL:', import.meta.env.VITE_API_URL);
-        // Force fallback to backend URL
-        apiBase = BACKEND_URL;
+        throw new Error('API configuration error. Backend URL is not set.');
       }
       
       // Ensure no trailing slash and validate
