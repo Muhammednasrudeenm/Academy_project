@@ -35,18 +35,48 @@ export default function Login() {
           return 'http://localhost:5000';
         }
         
-        // Priority 3: Production (Vercel) - use relative URLs, Vercel rewrites will proxy to Render
+        // Priority 3: Production - check if we have a backend URL from environment
+        // If not, try to use relative URLs (Vercel rewrites) but with better error handling
+        const backendUrl = import.meta.env.VITE_API_URL || process.env.VITE_API_URL;
+        if (backendUrl) {
+          return backendUrl;
+        }
+        
+        // Priority 4: Fallback to empty string for relative URLs (Vercel rewrites)
+        // This will work if Vercel rewrites are configured correctly
         return '';
       };
       
       const apiBase = getApiUrl();
-      const res = await fetch(`${apiBase}/api/users/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ name, email }),
-      });
+      const apiUrl = `${apiBase}/api/users/login`;
+      
+      // Better error handling for mobile fetch issues
+      let res;
+      try {
+        // Create abort controller for timeout (better browser compatibility)
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+        
+        res = await fetch(apiUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ name, email }),
+          signal: controller.signal,
+        });
+        
+        clearTimeout(timeoutId);
+      } catch (fetchError) {
+        console.error('Fetch error:', fetchError);
+        if (fetchError.name === 'AbortError') {
+          throw new Error('Request timeout. Please check your internet connection.');
+        }
+        if (fetchError.message && (fetchError.message.includes('Failed to fetch') || fetchError.message.includes('NetworkError'))) {
+          throw new Error('Network error. Please check your internet connection and try again. If the problem persists, ensure VITE_API_URL is set in your deployment settings.');
+        }
+        throw new Error(`Failed to connect to server: ${fetchError.message || 'Unknown error'}`);
+      }
 
       const data = await res.json();
 

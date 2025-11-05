@@ -39,22 +39,34 @@ const corsOptions = {
       process.env.FRONTEND_URL,
       // Allow any localhost port for development
       /^http:\/\/localhost:\d+$/,
-      // Vercel preview deployments
+      // Vercel domains - more flexible matching for mobile
+      /^https?:\/\/.*\.vercel\.app$/,
+      /^https?:\/\/.*\.vercel\.app\/.*$/,
       /\.vercel\.app$/,
+      // Netlify domains
       /\.netlify\.app$/,
-      // Allow any vercel domain
-      /https?:\/\/.*\.vercel\.app$/,
+      /^https?:\/\/.*\.netlify\.app$/,
+      // Allow any HTTPS origin in production (more permissive for mobile)
+      ...(process.env.NODE_ENV === 'production' ? [/^https:\/\/.+/] : []),
     ].filter(Boolean);
+    
+    // More permissive: if no specific match but it's HTTPS, allow it in production
+    if (process.env.NODE_ENV === 'production' && origin.startsWith('https://')) {
+      return callback(null, true);
+    }
     
     if (allowedOrigins.some(allowed => 
       typeof allowed === 'string' ? origin === allowed : allowed.test(origin)
     )) {
       callback(null, true);
     } else {
+      console.log(`CORS blocked origin: ${origin}`);
       callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 };
 
 // Use CORS with options

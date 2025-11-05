@@ -12,7 +12,15 @@ const getApiUrl = () => {
     return 'http://localhost:5000';
   }
   
-  // Priority 3: Production (Vercel) - use relative URLs, Vercel rewrites will proxy to Render
+  // Priority 3: Production - check if we have a backend URL from environment
+  // If not, try to use relative URLs (Vercel rewrites) but with better error handling
+  const backendUrl = import.meta.env.VITE_API_URL || process.env.VITE_API_URL;
+  if (backendUrl) {
+    return backendUrl;
+  }
+  
+  // Priority 4: Fallback to empty string for relative URLs (Vercel rewrites)
+  // This will work if Vercel rewrites are configured correctly
   return '';
 };
 
