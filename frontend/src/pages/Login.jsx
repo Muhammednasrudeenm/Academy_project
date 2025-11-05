@@ -24,66 +24,54 @@ export default function Login() {
     try {
       // Smart API URL resolver: uses VITE_API_URL environment variable first,
       // then falls back based on environment
-      // DEFINITIVE BACKEND URL - NEVER CHANGE THIS - HARDCODED TO PREVENT ANY ISSUES
+      // DEFINITIVE BACKEND URL - HARDCODED - NEVER CHANGE THIS
       // This is the Render backend URL that serves the API
       const BACKEND_URL = 'https://academy-project-94om.onrender.com';
       
-      // ALWAYS use production backend URL
-      // Removed localhost checks to ensure consistent behavior across all Vercel deployments
-      const apiBase = BACKEND_URL;
+      // CONSTRUCT ABSOLUTE URL DIRECTLY - NO STRING CONCATENATION THAT COULD FAIL
+      // This prevents any possibility of double slashes or relative URLs
+      const apiUrl = BACKEND_URL + '/api/users/login';
       
-      // CRITICAL: Validate apiBase is never empty or undefined
-      if (!apiBase || typeof apiBase !== 'string' || apiBase.trim() === '') {
-        console.error('[LOGIN] CRITICAL: apiBase is invalid!', apiBase);
-        throw new Error('API configuration error. Backend URL is not set.');
-      }
-      
-      // Ensure no trailing slash and validate
-      const cleanBase = apiBase.trim().endsWith('/') ? apiBase.trim().slice(0, -1) : apiBase.trim();
-      
-      // CRITICAL: Final validation - if still empty, use backend URL
-      const finalBase = cleanBase || BACKEND_URL;
-      
-      const apiUrl = `${finalBase}/api/users/login`;
-      
-      // Final validation - must be absolute URL
-      if (!apiUrl.startsWith('http://') && !apiUrl.startsWith('https://')) {
-        console.error('[LOGIN] CRITICAL: apiUrl is not absolute!', apiUrl);
-        console.error('[LOGIN] finalBase:', finalBase);
+      // CRITICAL VALIDATION - Throw error if URL is not absolute
+      if (!apiUrl.startsWith('https://')) {
+        console.error('[LOGIN] CRITICAL: Constructed URL is not absolute!', apiUrl);
         console.error('[LOGIN] BACKEND_URL:', BACKEND_URL);
-        // Use backend URL directly as last resort
-        const fallbackUrl = `${BACKEND_URL}/api/users/login`;
-        console.error('[LOGIN] Using fallback URL:', fallbackUrl);
-        throw new Error(`API URL configuration error. Expected: ${fallbackUrl}, Got: ${apiUrl}`);
+        throw new Error(`API URL configuration error. URL must be absolute but got: ${apiUrl}`);
       }
       
-      console.log('[LOGIN] Final API URL:', apiUrl);
-      console.log('[LOGIN] API Base:', finalBase);
+      // Additional validation - ensure no double slashes
+      if (apiUrl.includes('//api') || apiUrl.includes('//api/')) {
+        console.error('[LOGIN] CRITICAL: Double slash detected in URL!', apiUrl);
+        throw new Error(`API URL configuration error. Double slash detected in: ${apiUrl}`);
+      }
+      
+      // Set finalBase for logging (remove trailing slash if present)
+      const finalBase = BACKEND_URL.endsWith('/') ? BACKEND_URL.slice(0, -1) : BACKEND_URL;
+      
+      // CRITICAL: Log the exact URL being used
+      console.log('[LOGIN] ===== LOGIN DEBUG INFO =====');
+      console.log('[LOGIN] BACKEND_URL (hardcoded):', BACKEND_URL);
+      console.log('[LOGIN] Final API URL (constructed):', apiUrl);
+      console.log('[LOGIN] URL validation - starts with https://:', apiUrl.startsWith('https://'));
+      console.log('[LOGIN] URL validation - contains double slash:', apiUrl.includes('//'));
+      console.log('[LOGIN] Current origin:', window.location.origin);
+      console.log('[LOGIN] Current hostname:', window.location.hostname);
+      console.log('[LOGIN] VITE_API_URL:', import.meta.env.VITE_API_URL || 'not set');
+      console.log('[LOGIN] ===========================');
       
       // Set debug info for mobile (visible on screen)
       setDebugInfo({
-        apiBase: finalBase, // Use final base
+        apiBase: finalBase,
         apiUrl: apiUrl,
         origin: window.location.origin,
         hostname: window.location.hostname,
         userAgent: navigator.userAgent.substring(0, 50) + '...',
         status: 'Connecting...',
         viteApiUrl: import.meta.env.VITE_API_URL || 'not set',
-        isAbsolute: apiUrl.startsWith('http'),
-        backendUrl: BACKEND_URL
+        isAbsolute: apiUrl.startsWith('https://'),
+        backendUrl: BACKEND_URL,
+        hasDoubleSlash: apiUrl.includes('//api') || apiUrl.includes('//api/')
       });
-      
-      // Debug logging for mobile (also visible on screen)
-      console.log('[LOGIN] ===== LOGIN DEBUG INFO =====');
-      console.log('[LOGIN] API Base URL (raw):', apiBase);
-      console.log('[LOGIN] API Base URL (cleaned):', cleanBase);
-      console.log('[LOGIN] API Base URL (final):', finalBase);
-      console.log('[LOGIN] Full API URL:', apiUrl);
-      console.log('[LOGIN] Backend URL (hardcoded):', BACKEND_URL);
-      console.log('[LOGIN] Current origin:', window.location.origin);
-      console.log('[LOGIN] Current hostname:', window.location.hostname);
-      console.log('[LOGIN] VITE_API_URL:', import.meta.env.VITE_API_URL || 'not set');
-      console.log('[LOGIN] ===========================');
       
       // Test backend connectivity first (with retry for Render spin-down)
       // Note: Health check is optional - we'll continue even if it fails
