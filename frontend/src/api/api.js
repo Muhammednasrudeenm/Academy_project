@@ -24,6 +24,12 @@ const getApiUrl = () => {
   return BACKEND_URL;
 };
 
+// Helper function to get clean API base URL
+const getCleanApiUrl = () => {
+  const apiBase = getApiUrl();
+  return apiBase.endsWith('/') ? apiBase.slice(0, -1) : apiBase;
+};
+
 // 🟢 Fetch all academies (with caching)
 let academiesCache = null;
 let cacheTimestamp = 0;
@@ -35,12 +41,10 @@ export const fetchAcademies = async (forceRefresh = false) => {
     return academiesCache;
   }
   
-  const apiBase = getApiUrl();
-  // Ensure no trailing slash
-  const cleanBase = apiBase.endsWith('/') ? apiBase.slice(0, -1) : apiBase;
+  const apiBase = getCleanApiUrl();
   
   try {
-    const res = await fetch(`${cleanBase}/api/academies`, {
+    const res = await fetch(`${apiBase}/api/academies`, {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
@@ -76,30 +80,51 @@ export const fetchAcademies = async (forceRefresh = false) => {
 
 // 🟢 Fetch a single academy by ID
 export const fetchAcademyById = async (id) => {
-  const apiBase = getApiUrl();
-  const res = await fetch(`${apiBase}/api/academies/${id}`);
-  if (!res.ok) throw new Error("Failed to fetch academy details");
+  const apiBase = getCleanApiUrl();
+  const res = await fetch(`${apiBase}/api/academies/${id}`, {
+    method: 'GET',
+    headers: { 'Accept': 'application/json' },
+    mode: 'cors',
+    credentials: 'omit',
+  });
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(`Failed to fetch academy details: ${res.status} ${errorText}`);
+  }
   const data = await res.json();
   return data.data || data;
 };
 
 // 🟢 Fetch posts for an academy
 export const fetchPostsByAcademy = async (id) => {
-  const apiBase = getApiUrl();
-  const res = await fetch(`${apiBase}/api/posts/${id}/posts`);
-  if (!res.ok) throw new Error("Failed to fetch posts");
+  const apiBase = getCleanApiUrl();
+  const res = await fetch(`${apiBase}/api/posts/${id}/posts`, {
+    method: 'GET',
+    headers: { 'Accept': 'application/json' },
+    mode: 'cors',
+    credentials: 'omit',
+  });
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(`Failed to fetch posts: ${res.status} ${errorText}`);
+  }
   return res.json();
 };
 
 // 🟢 Create a new post in an academy
 export const createPost = async (academyId, postData) => {
-  const apiBase = getApiUrl();
+  const apiBase = getCleanApiUrl();
   const res = await fetch(`${apiBase}/api/posts/${academyId}/posts`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "Accept": "application/json" },
+    mode: 'cors',
+    credentials: 'omit',
     body: JSON.stringify(postData),
   });
-  if (!res.ok) throw new Error("Failed to create post");
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(`Failed to create post: ${res.status} ${errorText}`);
+  }
   return res.json();
 };
 
@@ -108,9 +133,11 @@ export const uploadMedia = async (file) => {
   const formData = new FormData();
   formData.append("image", file); // Changed from "file" to "image" to match backend
 
-  const apiBase = getApiUrl();
+  const apiBase = getCleanApiUrl();
   const res = await fetch(`${apiBase}/api/upload/single`, {
     method: "POST",
+    mode: 'cors',
+    credentials: 'omit',
     body: formData,
   });
 
@@ -132,15 +159,17 @@ export const uploadMedia = async (file) => {
 
 // 🟢 Join/Leave Academy
 export const toggleJoinAcademy = async (academyId, userId) => {
-  const apiBase = getApiUrl();
+  const apiBase = getCleanApiUrl();
   const res = await fetch(`${apiBase}/api/academies/${academyId}/toggle-join`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "Accept": "application/json" },
+    mode: 'cors',
+    credentials: 'omit',
     body: JSON.stringify({ userId }),
   });
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.message || "Failed to toggle join");
+    throw new Error(errorData.message || `Failed to toggle join: ${res.status}`);
   }
   return res.json();
 };
@@ -182,17 +211,33 @@ export const toggleLikePost = async (postId, userId) => {
 
 // 🟢 Get my academies
 export const fetchMyAcademies = async (userId) => {
-  const apiBase = getApiUrl();
-  const res = await fetch(`${apiBase}/api/academies/user/${userId}/created`);
-  if (!res.ok) throw new Error("Failed to fetch my academies");
+  const apiBase = getCleanApiUrl();
+  const res = await fetch(`${apiBase}/api/academies/user/${userId}/created`, {
+    method: 'GET',
+    headers: { 'Accept': 'application/json' },
+    mode: 'cors',
+    credentials: 'omit',
+  });
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(`Failed to fetch my academies: ${res.status} ${errorText}`);
+  }
   return res.json();
 };
 
 // 🟢 Get joined academies
 export const fetchJoinedAcademies = async (userId) => {
-  const apiBase = getApiUrl();
-  const res = await fetch(`${apiBase}/api/academies/user/${userId}/joined`);
-  if (!res.ok) throw new Error("Failed to fetch joined academies");
+  const apiBase = getCleanApiUrl();
+  const res = await fetch(`${apiBase}/api/academies/user/${userId}/joined`, {
+    method: 'GET',
+    headers: { 'Accept': 'application/json' },
+    mode: 'cors',
+    credentials: 'omit',
+  });
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(`Failed to fetch joined academies: ${res.status} ${errorText}`);
+  }
   return res.json();
 };
 
