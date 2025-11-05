@@ -24,72 +24,81 @@ export default function Login() {
     try {
       // Smart API URL resolver: uses VITE_API_URL environment variable first,
       // then falls back based on environment
-      const getApiUrl = () => {
-        // DEFINITIVE BACKEND URL - NEVER CHANGE THIS
-        const BACKEND_URL = 'https://academy-project-94om.onrender.com';
-        
-        // Priority 1: Check runtime hostname - if on localhost, use local backend
-        if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-          // Local development - use local backend server
-          return 'http://localhost:5000';
-        }
-        
-        // Priority 2: Use VITE_API_URL ONLY if it's set, not empty, and is a valid URL
-        const viteApiUrl = import.meta.env.VITE_API_URL;
-        if (viteApiUrl && typeof viteApiUrl === 'string' && viteApiUrl.trim() !== '' && viteApiUrl.startsWith('http')) {
-          const trimmed = viteApiUrl.trim();
-          // Ensure it doesn't end with a slash
-          return trimmed.endsWith('/') ? trimmed.slice(0, -1) : trimmed;
-        }
-        
-        // Priority 3: ALWAYS use direct backend URL as fallback
-        // NEVER use relative URLs or empty strings - always use direct backend URL
-        // Vercel rewrites cause CORS issues, so we bypass them completely
-        return BACKEND_URL;
-      };
+      // DEFINITIVE BACKEND URL - NEVER CHANGE THIS - HARDCODED TO PREVENT ANY ISSUES
+      const BACKEND_URL = 'https://academy-project-94om.onrender.com';
       
-      const apiBase = getApiUrl();
+      // CRITICAL: Always use direct backend URL in production
+      // NEVER rely on environment variables or relative URLs
+      let apiBase;
+      if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+        // Local development only
+        apiBase = 'http://localhost:5000';
+      } else {
+        // Production: ALWAYS use direct backend URL
+        apiBase = BACKEND_URL;
+      }
       
       // CRITICAL: Validate apiBase is never empty or undefined
       if (!apiBase || typeof apiBase !== 'string' || apiBase.trim() === '') {
         console.error('[LOGIN] CRITICAL: apiBase is invalid!', apiBase);
-        throw new Error('API configuration error. Please contact support.');
+        console.error('[LOGIN] window.location:', window.location);
+        console.error('[LOGIN] VITE_API_URL:', import.meta.env.VITE_API_URL);
+        // Force fallback to backend URL
+        apiBase = BACKEND_URL;
       }
       
-      // Ensure no double slashes
-      const cleanBase = apiBase.endsWith('/') ? apiBase.slice(0, -1) : apiBase;
-      const apiUrl = `${cleanBase}/api/users/login`;
+      // Ensure no trailing slash and validate
+      const cleanBase = apiBase.trim().endsWith('/') ? apiBase.trim().slice(0, -1) : apiBase.trim();
       
-      // Final validation
-      if (!apiUrl.startsWith('http')) {
+      // CRITICAL: Final validation - if still empty, use backend URL
+      const finalBase = cleanBase || BACKEND_URL;
+      
+      const apiUrl = `${finalBase}/api/users/login`;
+      
+      // Final validation - must be absolute URL
+      if (!apiUrl.startsWith('http://') && !apiUrl.startsWith('https://')) {
         console.error('[LOGIN] CRITICAL: apiUrl is not absolute!', apiUrl);
-        throw new Error('API URL configuration error. Please contact support.');
+        console.error('[LOGIN] finalBase:', finalBase);
+        console.error('[LOGIN] BACKEND_URL:', BACKEND_URL);
+        // Use backend URL directly as last resort
+        const fallbackUrl = `${BACKEND_URL}/api/users/login`;
+        console.error('[LOGIN] Using fallback URL:', fallbackUrl);
+        throw new Error(`API URL configuration error. Expected: ${fallbackUrl}, Got: ${apiUrl}`);
       }
+      
+      console.log('[LOGIN] Final API URL:', apiUrl);
+      console.log('[LOGIN] API Base:', finalBase);
       
       // Set debug info for mobile (visible on screen)
       setDebugInfo({
-        apiBase: cleanBase, // Use cleaned base
+        apiBase: finalBase, // Use final base
         apiUrl: apiUrl,
         origin: window.location.origin,
         hostname: window.location.hostname,
         userAgent: navigator.userAgent.substring(0, 50) + '...',
         status: 'Connecting...',
         viteApiUrl: import.meta.env.VITE_API_URL || 'not set',
-        isAbsolute: apiUrl.startsWith('http')
+        isAbsolute: apiUrl.startsWith('http'),
+        backendUrl: BACKEND_URL
       });
       
       // Debug logging for mobile (also visible on screen)
-      console.log('[LOGIN] API Base URL:', apiBase);
+      console.log('[LOGIN] ===== LOGIN DEBUG INFO =====');
+      console.log('[LOGIN] API Base URL (raw):', apiBase);
+      console.log('[LOGIN] API Base URL (cleaned):', cleanBase);
+      console.log('[LOGIN] API Base URL (final):', finalBase);
       console.log('[LOGIN] Full API URL:', apiUrl);
+      console.log('[LOGIN] Backend URL (hardcoded):', BACKEND_URL);
       console.log('[LOGIN] Current origin:', window.location.origin);
+      console.log('[LOGIN] Current hostname:', window.location.hostname);
       console.log('[LOGIN] VITE_API_URL:', import.meta.env.VITE_API_URL || 'not set');
-      console.log('[LOGIN] User Agent:', navigator.userAgent);
+      console.log('[LOGIN] ===========================');
       
       // Test backend connectivity first (with retry for Render spin-down)
       let healthCheckSuccess = false;
       for (let attempt = 0; attempt < 2; attempt++) {
         try {
-          const healthUrl = `${cleanBase}/api/health`; // Use cleaned base
+          const healthUrl = `${finalBase}/api/health`; // Use final base
           const healthController = new AbortController();
           const healthTimeout = setTimeout(() => healthController.abort(), 15000); // 15 seconds for Render spin-up
           const healthCheck = await fetch(healthUrl, {
