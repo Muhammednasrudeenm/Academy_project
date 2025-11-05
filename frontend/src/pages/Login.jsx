@@ -204,11 +204,20 @@ export default function Login() {
       }
 
       const data = await res.json();
+      
+      console.log('[LOGIN] Response data:', data);
 
       if (!data.success) {
+        console.error('[LOGIN] Login failed:', data.message);
         throw new Error(data.message || "Login failed");
       }
 
+      if (!data.data) {
+        console.error('[LOGIN] No user data in response:', data);
+        throw new Error("No user data received from server");
+      }
+
+      console.log('[LOGIN] Saving user to localStorage:', data.data);
       // ✅ Save user in localStorage
       localStorage.setItem("user", JSON.stringify(data.data));
       setDebugInfo(prev => ({ ...prev, status: 'Login successful! Redirecting...' }));
