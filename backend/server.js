@@ -94,6 +94,22 @@ app.use("/api/users", (req, res, next) => {
   console.log(`[DEBUG USERS] Request path: ${req.path}`);
   console.log(`[DEBUG USERS] Request baseUrl: ${req.baseUrl}`);
   console.log(`[DEBUG USERS] Request originalUrl: ${req.originalUrl}`);
+  console.log(`[DEBUG USERS] Request headers:`, {
+    origin: req.headers.origin,
+    'content-type': req.headers['content-type'],
+    'user-agent': req.headers['user-agent']?.substring(0, 50)
+  });
+  
+  // Handle OPTIONS preflight requests explicitly
+  if (req.method === 'OPTIONS') {
+    console.log(`[DEBUG USERS] Handling OPTIONS preflight request`);
+    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
+    res.header('Access-Control-Max-Age', '86400');
+    return res.status(200).end();
+  }
+  
   next();
 });
 

@@ -164,18 +164,33 @@ export default function Login() {
             urlStartsWith: apiUrl.substring(0, 40)
           });
           
+          // Log request details before sending
+          const requestBody = JSON.stringify({ name, email });
+          console.log('[LOGIN] Request body:', requestBody);
+          console.log('[LOGIN] Request headers:', {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          });
+          
           res = await fetch(apiUrl, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
               "Accept": "application/json",
             },
-            body: JSON.stringify({ name, email }),
+            body: requestBody,
             signal: controller.signal,
             mode: 'cors', // Explicitly set CORS mode
             credentials: 'omit', // Don't send credentials to avoid CORS issues
             cache: 'no-cache', // Prevent caching issues
             redirect: 'follow', // Follow redirects
+          });
+          
+          console.log('[LOGIN] Response received:', {
+            status: res.status,
+            statusText: res.statusText,
+            ok: res.ok,
+            headers: Object.fromEntries(res.headers.entries())
           });
           
           clearTimeout(timeoutId);
