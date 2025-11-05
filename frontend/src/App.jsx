@@ -28,7 +28,7 @@ export default function App() {
           <Route
             path="/"
             element={
-              <DashboardLayout>
+              <DashboardLayout hideMobileHamburger={true}>
                 <Available_Communities />
               </DashboardLayout>
             }
@@ -42,7 +42,7 @@ export default function App() {
           <Route
             path="/communities"
             element={
-              <DashboardLayout>
+              <DashboardLayout hideMobileHamburger={true}>
                 <Available_Communities />
               </DashboardLayout>
             }

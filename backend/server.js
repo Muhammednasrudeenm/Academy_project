@@ -33,8 +33,12 @@ const corsOptions = {
     
     const allowedOrigins = [
       'http://localhost:5173',
+      'http://localhost:5174',
+      'http://localhost:5175',
       'http://localhost:3000',
       process.env.FRONTEND_URL,
+      // Allow any localhost port for development
+      /^http:\/\/localhost:\d+$/,
       // Vercel preview deployments
       /\.vercel\.app$/,
       /\.netlify\.app$/,
@@ -68,6 +72,24 @@ app.get("/api/debug", (req, res) => {
 });
 
 // ✅ Correct route prefixes
+// Debug: Log all requests to /api/posts BEFORE routing
+app.use("/api/posts", (req, res, next) => {
+  console.log(`[DEBUG POSTS] ${req.method} ${req.originalUrl}`);
+  next();
+});
+
+// TEMPORARY: Direct route for testing delete post
+app.delete("/api/posts/remove/:postId", async (req, res) => {
+  console.log(`[DIRECT ROUTE] Delete post called: ${req.params.postId}`);
+  try {
+    const { deletePost } = await import("./controllers/postControllerFirestore.js");
+    return deletePost(req, res);
+  } catch (err) {
+    console.error("Error in direct route:", err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 app.use("/api/posts", postRoutes);
 app.use("/api/academies", academyRoutes);
 app.use("/api/upload", uploadRoutes);
@@ -78,6 +100,7 @@ app.use("/api/firebase-test", firebaseTestRoutes);
 
 // ✅ Fallback for undefined routes
 app.use((req, res) => {
+  console.log(`[404] Route not found: ${req.method} ${req.originalUrl}`);
   res.status(404).json({ message: "Route not found 🚫" });
 });
 

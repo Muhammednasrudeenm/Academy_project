@@ -57,3 +57,6 @@ firebase deploy --only functions
 **Just 3 commands to deploy! 🎉**
 
 
+
+
+

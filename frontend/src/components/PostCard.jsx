@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback, memo } from "react";
-import { Heart, MessageCircle, X, Send } from "lucide-react";
-import { toggleLikePost, fetchPostComments, createComment, deleteComment } from "../api/api";
+import { Heart, MessageCircle, X, Send, Trash2 } from "lucide-react";
+import { toggleLikePost, fetchPostComments, createComment, deleteComment, deletePost } from "../api/api";
 import ExpandableText from "./ExpandableText";
 import { useToast } from "../contexts/ToastContext";
 
-const PostCard = memo(function PostCard({ post, onPostUpdate }) {
+const PostCard = memo(function PostCard({ post, onPostUpdate, onPostDelete }) {
   const { showError, showSuccess } = useToast();
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
@@ -16,6 +16,8 @@ const PostCard = memo(function PostCard({ post, onPostUpdate }) {
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [justLiked, setJustLiked] = useState(false);
   const [showDoubleTapHeart, setShowDoubleTapHeart] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const lastTapRef = useRef(0);
 
   // Memoize user to prevent re-parsing on every render
@@ -121,6 +123,23 @@ const PostCard = memo(function PostCard({ post, onPostUpdate }) {
     }
   };
 
+  const handleDeletePost = async () => {
+    if (!user || !onPostDelete) return;
+
+    setDeleting(true);
+    try {
+      await deletePost(post._id, user._id);
+      showSuccess("Post deleted successfully");
+      setShowDeleteConfirm(false);
+      onPostDelete(post._id);
+    } catch (error) {
+      console.error("Error deleting post:", error);
+      showError(error.message || "Failed to delete post");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const handleLike = async (showDoubleTapAnimation = false) => {
     if (!user) {
       showError("Please login to like posts");
@@ -214,49 +233,54 @@ const PostCard = memo(function PostCard({ post, onPostUpdate }) {
   };
 
   return (
-    <article className="relative bg-gradient-to-br from-[#1E293B]/95 via-[#15202B]/95 to-[#1E293B]/95 backdrop-blur-sm rounded-3xl p-6 sm:p-8 md:p-10 shadow-2xl border border-gray-700/50 hover:border-gray-600/80 hover:shadow-sky-500/20 transition-all duration-500 w-full max-w-full overflow-hidden group" style={{ boxSizing: 'border-box' }}>
-      {/* Decorative Background */}
-      <div className="absolute inset-0 bg-gradient-to-r from-sky-500/5 via-transparent to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl"></div>
-      
+    <article className="relative bg-black border-b border-[#2f3336] px-4 py-3 hover:bg-[#181818] transition-colors w-full">
       <div className="relative z-10">
-        {/* Header - Premium */}
-        <div className="flex items-center gap-4 mb-5 sm:mb-6 pb-4 border-b border-gray-700/50">
-          <div className="relative group/avatar">
-            <div className="absolute inset-0 bg-gradient-to-br from-sky-400 to-purple-500 rounded-full blur-lg opacity-0 group-hover/avatar:opacity-50 transition-opacity"></div>
-            <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-sky-500 to-sky-600 flex items-center justify-center text-white font-bold text-lg sm:text-xl shadow-lg ring-2 ring-sky-500/30 transition-transform group-hover/avatar:scale-110">
+        {/* Header - Twitter Style */}
+        <div className="flex items-start gap-3 mb-2">
+          <div className="flex-shrink-0">
+            <div className="w-12 h-12 rounded-full bg-[#1d9bf0] flex items-center justify-center text-white font-bold text-[15px] leading-normal">
               {post.user?.name?.[0]?.toUpperCase() || "U"}
             </div>
-            <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-3 border-[#1E293B] shadow-lg"></div>
           </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <h3 className="font-bold text-white text-base sm:text-lg md:text-xl truncate">
-                {post.user?.name || "Anonymous"}
-              </h3>
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-blue-400 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
-                <path fillRule="evenodd" d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" clipRule="evenodd" />
-              </svg>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 mb-0.5">
+                <h3 className="font-bold text-white text-[15px] truncate leading-normal">
+                  {post.user?.name || "Anonymous"}
+                </h3>
+                <span className="text-[#71767a] text-[15px] leading-normal">@{post.user?.name?.toLowerCase().replace(/\s+/g, '') || "user"}</span>
+                <span className="text-[#71767a]">·</span>
+                <span className="text-[#71767a] text-[15px] leading-normal">{formatDate(post.createdAt)}</span>
+              </div>
+              {/* Delete Button - Only for post owner */}
+              {user && post.user?._id && (post.user._id.toString() === user._id?.toString() || post.user._id === user._id) && onPostDelete && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowDeleteConfirm(true);
+                  }}
+                  className="p-1.5 rounded-full hover:bg-[#181818] text-[#71767a] hover:text-[#f4212e] transition-colors"
+                  aria-label="Delete post"
+                >
+                  <Trash2 size={16} />
+                </button>
+              )}
             </div>
-            <p className="text-sm sm:text-base text-gray-400 flex items-center gap-2">
-              <span>{formatDate(post.createdAt)}</span>
-              <span className="text-gray-600">•</span>
-              <span className="text-xs text-gray-500">Community Post</span>
-            </p>
           </div>
         </div>
 
-        {/* Content Section */}
-        <div className="mb-5 sm:mb-6 space-y-4">
+        {/* Content Section - Twitter Style */}
+        <div className="mb-3">
           {/* Title */}
           {post.title && (
-            <h4 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-white leading-tight bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+            <h4 className="text-[15px] font-bold text-white mb-2 leading-normal">
               {post.title}
             </h4>
           )}
 
           {/* Caption */}
           {post.caption && (
-            <div className="text-base sm:text-lg md:text-xl text-gray-300 leading-relaxed overflow-wrap-anywhere">
+            <div className="text-[15px] text-white leading-normal whitespace-pre-wrap break-words">
               {post.caption && post.caption.length > 500 ? (
                 <ExpandableText 
                   key={`expandable-caption-${post._id}`}
@@ -264,19 +288,19 @@ const PostCard = memo(function PostCard({ post, onPostUpdate }) {
                   maxLength={500} 
                 />
               ) : (
-                <span className="whitespace-pre-wrap break-words">{post.caption}</span>
+                <span>{post.caption}</span>
               )}
             </div>
           )}
         </div>
 
-        {/* Media - Premium with Double Tap to Like */}
+        {/* Media - Twitter Style */}
         {post.image && (
-          <div className="mb-5 sm:mb-6 rounded-2xl overflow-hidden w-full max-w-full border-2 border-gray-700/50 shadow-xl bg-gray-800/30 group/media relative">
+          <div className="mb-3 rounded-2xl overflow-hidden w-full max-w-full group/media relative">
             <img
               src={post.image}
               alt={post.title || "Post image"}
-              className="w-full h-auto max-h-[600px] object-contain rounded-2xl max-w-full transition-transform duration-500 group-hover/media:scale-[1.02] cursor-pointer"
+              className="w-full h-auto max-h-[600px] object-cover rounded-2xl max-w-full cursor-pointer"
               style={{ maxWidth: '100%', height: 'auto', display: 'block', width: '100%' }}
               onDoubleClick={handleDoubleTap}
             />
@@ -292,11 +316,11 @@ const PostCard = memo(function PostCard({ post, onPostUpdate }) {
           </div>
         )}
         {post.video && (
-          <div className="mb-5 sm:mb-6 rounded-2xl overflow-hidden w-full max-w-full border-2 border-gray-700/50 shadow-xl bg-gray-800/30 relative">
+          <div className="mb-3 rounded-2xl overflow-hidden w-full max-w-full relative">
             <video
               src={post.video}
               controls
-              className="w-full h-auto max-h-[600px] object-contain rounded-2xl max-w-full cursor-pointer"
+              className="w-full h-auto max-h-[600px] object-cover rounded-2xl max-w-full cursor-pointer"
               style={{ maxWidth: '100%', height: 'auto', display: 'block', width: '100%' }}
               onDoubleClick={handleDoubleTap}
             />
@@ -312,20 +336,8 @@ const PostCard = memo(function PostCard({ post, onPostUpdate }) {
           </div>
         )}
 
-        {/* Actions - Premium */}
-        <div className="flex items-center gap-3 sm:gap-4 pt-5 border-t border-gray-700/50">
-          <button
-            onClick={handleLike}
-            disabled={loading}
-            className="group/like flex items-center gap-2.5 px-2 py-2 transition-all duration-300 transform hover:scale-105 disabled:opacity-50"
-          >
-            <Heart 
-              size={20} 
-              className={`${isLiked ? "fill-current text-red-500" : "text-gray-300"} ${justLiked ? "animate-heartbeat" : ""} group-hover/like:scale-110 transition-all duration-200`} 
-            />
-            <span className={`text-sm sm:text-base font-bold ${isLiked ? "text-red-500" : "text-gray-300"}`}>{likesCount}</span>
-          </button>
-
+        {/* Actions - Twitter Style */}
+        <div className="flex items-center justify-between max-w-[425px] mt-3">
           <button
             onClick={() => {
               setShowComments(!showComments);
@@ -333,24 +345,40 @@ const PostCard = memo(function PostCard({ post, onPostUpdate }) {
                 loadComments();
               }
             }}
-            className="group/comment flex items-center gap-2.5 px-2 py-2 transition-all duration-300 transform hover:scale-105"
+            className="group/comment flex items-center gap-2 text-[#71767a] hover:text-[#1d9bf0] transition-colors"
           >
-            <MessageCircle size={20} className={`${showComments ? "text-sky-400" : "text-gray-300"} group-hover/comment:scale-110 transition-transform`} />
-            <span className={`text-sm sm:text-base font-bold ${showComments ? "text-sky-400" : "text-gray-300"}`}>
+            <div className="p-2 rounded-full group-hover/comment:bg-[#1d9bf0]/10 transition-colors">
+              <MessageCircle size={20} className={showComments ? "text-[#1d9bf0]" : ""} />
+            </div>
+            <span className={`text-[13px] ${showComments ? "text-[#1d9bf0]" : ""}`}>
               {post.comments || 0}
             </span>
           </button>
+
+          <button
+            onClick={handleLike}
+            disabled={loading}
+            className="group/like flex items-center gap-2 text-[#71767a] hover:text-[#f4212e] transition-colors disabled:opacity-50"
+          >
+            <div className="p-2 rounded-full group-hover/like:bg-[#f4212e]/10 transition-colors">
+              <Heart 
+                size={20} 
+                className={`${isLiked ? "fill-current text-[#f4212e]" : ""} ${justLiked ? "animate-heartbeat" : ""} transition-all`} 
+              />
+            </div>
+            <span className={`text-[13px] ${isLiked ? "text-[#f4212e]" : ""}`}>{likesCount}</span>
+          </button>
         </div>
 
-        {/* Comments Section - Premium */}
+        {/* Comments Section - Twitter Style */}
         {showComments && (
-          <div className="mt-5 pt-5 border-t border-gray-700/50 animate-slideDown">
-            {/* Add Comment Form - Premium */}
+          <div className="mt-3 pt-3 border-t border-[#2f3336]">
+            {/* Add Comment Form - Twitter Style */}
             {user && (
-              <form onSubmit={handleAddComment} className="mb-5">
+              <form onSubmit={handleAddComment} className="mb-4">
                 <div className="flex gap-3">
                   <div className="relative flex-shrink-0">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-sky-500 to-sky-600 flex items-center justify-center text-white font-bold text-sm shadow-lg ring-2 ring-sky-500/30">
+                    <div className="w-10 h-10 rounded-full bg-[#1d9bf0] flex items-center justify-center text-white font-bold text-[15px] leading-normal">
                       {user?.name?.[0]?.toUpperCase() || "U"}
                     </div>
                   </div>
@@ -363,24 +391,24 @@ const PostCard = memo(function PostCard({ post, onPostUpdate }) {
                             setCommentText(e.target.value);
                           }
                         }}
-                        placeholder="Write a comment..."
+                        placeholder="Tweet your reply"
                         rows={commentText.length > 100 ? 3 : 1}
-                        className="flex-1 bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm border-2 border-gray-700/50 rounded-xl px-4 py-2.5 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500 transition-all duration-300 resize-none"
+                        className="flex-1 bg-transparent border-none rounded-lg px-2 py-2 text-[15px] text-white placeholder-[#71767a] focus:outline-none resize-none leading-normal"
                       />
                       <button
                         type="submit"
                         disabled={commentLoading || !commentText.trim() || commentText.length > 5000}
-                        className="px-4 py-2.5 bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg hover:shadow-sky-500/50 transform hover:scale-105 self-start"
+                        className="px-4 py-2 bg-[#1d9bf0] hover:bg-[#1a8cd8] text-white rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 font-bold text-[15px] leading-normal"
                       >
                         <Send size={16} />
                       </button>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className={`text-xs ${commentText.length > 5000 ? 'text-red-400' : commentText.length > 4500 ? 'text-yellow-400' : 'text-gray-500'}`}>
-                        {commentText.length} / 5000
+                      <span className={`text-[13px] leading-normal ${commentText.length > 5000 ? 'text-[#f4212e]' : 'text-[#71767a]'}`}>
+                        {commentText.length > 0 && `${commentText.length} / 5000`}
                       </span>
                       {commentText.length > 5000 && (
-                        <span className="text-xs text-red-400">Character limit exceeded</span>
+                        <span className="text-[13px] leading-normal text-[#f4212e]">Character limit exceeded</span>
                       )}
                     </div>
                   </div>
@@ -388,46 +416,45 @@ const PostCard = memo(function PostCard({ post, onPostUpdate }) {
               </form>
             )}
 
-            {/* Comments List - Premium */}
-            <div className="space-y-3 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
+            {/* Comments List - Twitter Style */}
+            <div className="space-y-4 max-h-96 overflow-y-auto">
               {commentsLoading ? (
                 <div className="text-center py-8">
-                  <div className="inline-block w-6 h-6 border-2 border-sky-500/30 border-t-sky-500 rounded-full animate-spin mb-2"></div>
-                  <p className="text-gray-400 text-sm">Loading comments...</p>
+                  <div className="inline-block w-6 h-6 border-2 border-[#1d9bf0] border-t-transparent rounded-full animate-spin mb-2"></div>
+                  <p className="text-[#71767a] text-[15px] leading-normal">Loading comments...</p>
                 </div>
               ) : comments.length > 0 ? (
                 comments.map((comment, index) => {
                   const isCommentOwner = user && comment.user?._id?.toString() === user._id;
                   return (
-                    <div key={`comment-${comment._id}-${index}`} className="flex gap-3 animate-fadeIn">
+                    <div key={`comment-${comment._id}-${index}`} className="flex gap-3 pb-4 border-b border-[#2f3336] last:border-0">
                       <div className="relative flex-shrink-0">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-sky-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm shadow-lg ring-2 ring-sky-500/30">
+                        <div className="w-10 h-10 rounded-full bg-[#1d9bf0] flex items-center justify-center text-white font-bold text-[15px] leading-normal">
                           {comment.user?.name?.[0]?.toUpperCase() || "U"}
                         </div>
                       </div>
-                      <div className="flex-1 bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-xl p-3.5 border border-gray-700/30 shadow-lg">
-                        <div className="flex items-center justify-between mb-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-bold text-white">
+                            <span className="text-[15px] font-bold text-white leading-normal">
                               {comment.user?.name || "Anonymous"}
                             </span>
-                            <span className="text-xs text-gray-400">
+                            <span className="text-[15px] text-[#71767a] leading-normal">@{comment.user?.name?.toLowerCase().replace(/\s+/g, '') || "user"}</span>
+                            <span className="text-[#71767a]">·</span>
+                            <span className="text-[15px] text-[#71767a] leading-normal">
                               {formatDate(comment.createdAt)}
                             </span>
                           </div>
                           {isCommentOwner && (
                             <button
                               onClick={() => handleDeleteComment(comment._id)}
-                              className="p-1.5 rounded-lg text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-all duration-200"
+                              className="p-1.5 rounded-full text-[#71767a] hover:text-[#f4212e] hover:bg-[#f4212e]/10 transition-colors"
                             >
                               <X size={14} />
                             </button>
                           )}
                         </div>
-                        <div 
-                          className="text-sm text-gray-300 leading-relaxed"
-                          style={{ position: 'relative' }}
-                        >
+                        <div className="text-[15px] text-white leading-normal">
                           {comment.text && String(comment.text).trim().length > 300 ? (
                             <ExpandableText 
                               key={`expandable-comment-${comment._id}`}
@@ -443,14 +470,59 @@ const PostCard = memo(function PostCard({ post, onPostUpdate }) {
                   );
                 })
               ) : (
-                <div className="text-center py-8 rounded-xl bg-gray-800/30 border border-gray-700/30">
-                  <p className="text-gray-400 text-sm">No comments yet. Be the first to comment!</p>
+                <div className="text-center py-8">
+                  <p className="text-[#71767a] text-[15px] leading-normal">No comments yet. Be the first to comment!</p>
                 </div>
               )}
             </div>
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div 
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[99999]" 
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !deleting) {
+              setShowDeleteConfirm(false);
+            }
+          }}
+        >
+          <div 
+            className="relative w-full max-w-md mx-4 flex flex-col animate-fadeIn bg-black/90 backdrop-blur-xl border border-[#2f3336]/50 rounded-2xl shadow-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Background glow effect */}
+            <div className="absolute inset-0 bg-gradient-to-br from-[#f4212e]/10 via-transparent to-transparent opacity-50 pointer-events-none"></div>
+            
+            <div className="relative p-6 z-10">
+              <h3 className="text-[20px] font-bold text-white mb-2 leading-tight">
+                Delete post?
+              </h3>
+              <p className="text-[15px] text-[#71767a] mb-6 leading-normal">
+                This can't be undone and it will be removed from the academy.
+              </p>
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={handleDeletePost}
+                  disabled={deleting}
+                  className="w-full py-3 rounded-full bg-[#f4212e] text-white font-bold text-[15px] leading-normal hover:bg-[#d91a26] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {deleting ? "Deleting..." : "Delete"}
+                </button>
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  disabled={deleting}
+                  className="w-full py-3 rounded-full bg-black/50 backdrop-blur-sm text-white border border-[#2f3336] font-bold text-[15px] leading-normal hover:bg-[#181818] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Custom CSS for animations */}
       <style>{`

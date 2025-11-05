@@ -6,10 +6,10 @@ const getApiUrl = () => {
     return import.meta.env.VITE_API_URL;
   }
   
-  // Priority 2: Check runtime hostname - if on localhost, use Render URL directly
+  // Priority 2: Check runtime hostname - if on localhost, use local backend
   if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-    // Local development - fallback to Render URL
-    return 'https://academy-project-94om.onrender.com';
+    // Local development - use local backend server
+    return 'http://localhost:5000';
   }
   
   // Priority 3: Production (Vercel) - use relative URLs, Vercel rewrites will proxy to Render
@@ -190,5 +190,23 @@ export const deleteComment = async (commentId, userId) => {
     body: JSON.stringify({ userId }),
   });
   if (!res.ok) throw new Error("Failed to delete comment");
+  return res.json();
+};
+
+// 🟢 Delete a post
+export const deletePost = async (postId, userId) => {
+  const apiBase = getApiUrl();
+  const url = `${apiBase}/api/posts/remove/${postId}`;
+  console.log("Delete post URL:", url, "userId:", userId);
+  const res = await fetch(url, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId }),
+  });
+  if (!res.ok) {
+    const errorText = await res.text();
+    console.error("Delete post error:", res.status, errorText);
+    throw new Error(errorText || "Failed to delete post");
+  }
   return res.json();
 };

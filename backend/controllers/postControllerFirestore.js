@@ -122,3 +122,51 @@ export const toggleLikePost = async (req, res) => {
   }
 };
 
+// 🟢 Delete a post
+export const deletePost = async (req, res) => {
+  try {
+    console.log("========== DELETE POST CONTROLLER CALLED ==========");
+    console.log("Method:", req.method);
+    console.log("Path:", req.path);
+    console.log("Original URL:", req.originalUrl);
+    console.log("Params:", req.params);
+    console.log("Body:", req.body);
+    console.log("===================================================");
+    const { postId } = req.params;
+    const { userId } = req.body;
+
+    if (!userId) {
+      console.log("Delete post: Missing userId");
+      return res.status(400).json({ success: false, message: "User ID is required" });
+    }
+
+    console.log("Delete post: Fetching post", postId);
+    const post = await Post.getPostById(postId);
+    if (!post) {
+      console.log("Delete post: Post not found", postId);
+      return res.status(404).json({ success: false, message: "Post not found" });
+    }
+
+    // Check if user is the post creator
+    // Handle both cases: post.user might be a string (ID) or an object with _id
+    const postUserId = post.user?._id || post.user;
+    console.log("Delete post: Comparing users", { postUserId, userId, match: String(postUserId) === String(userId) });
+    if (String(postUserId) !== String(userId)) {
+      console.log("Delete post: User not authorized", { postUserId, userId });
+      return res.status(403).json({ success: false, message: "Only the post creator can delete this post" });
+    }
+
+    console.log("Delete post: Deleting post", postId);
+    await Post.deletePost(postId);
+
+    console.log("Delete post: Success");
+    res.json({
+      success: true,
+      message: "Post deleted successfully",
+    });
+  } catch (err) {
+    console.error("Delete post error:", err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
