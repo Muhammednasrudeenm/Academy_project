@@ -16,7 +16,6 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
-  const [debugInfo, setDebugInfo] = useState(null); // For mobile debugging
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -102,20 +101,6 @@ export default function Login() {
       console.log('[LOGIN] VITE_API_URL:', import.meta.env.VITE_API_URL || 'not set');
       console.log('[LOGIN] ===========================');
       
-      // Set debug info for mobile (visible on screen)
-      setDebugInfo({
-        apiBase: finalBase,
-        apiUrl: apiUrl,
-        origin: window.location.origin,
-        hostname: window.location.hostname,
-        userAgent: navigator.userAgent.substring(0, 50) + '...',
-        status: 'Connecting...',
-        viteApiUrl: import.meta.env.VITE_API_URL || 'not set',
-        isAbsolute: apiUrl.startsWith('https://'),
-        backendUrl: BACKEND_URL,
-        hasDoubleSlash: apiUrl.includes('//api') || apiUrl.includes('//api/')
-      });
-      
       // Test backend connectivity first (with retry for Render spin-down)
       // Note: Health check is optional - we'll continue even if it fails
       let healthCheckSuccess = false;
@@ -136,18 +121,15 @@ export default function Login() {
           });
           clearTimeout(healthTimeout);
           if (healthCheck.ok) {
-            setDebugInfo(prev => ({ ...prev, healthCheck: healthCheck.status, status: 'Health check OK' }));
             healthCheckSuccess = true;
             console.log('[LOGIN] Backend health check successful:', healthCheck.status);
             break;
           }
         } catch (healthError) {
           if (attempt === 0) {
-            setDebugInfo(prev => ({ ...prev, healthCheck: 'Retrying...', status: 'Backend may be spinning up, retrying health check...' }));
             console.warn('[LOGIN] Health check failed, retrying (Render may be spinning up):', healthError.message);
             await new Promise(resolve => setTimeout(resolve, 3000)); // Wait 3 seconds before retry
           } else {
-            setDebugInfo(prev => ({ ...prev, healthCheck: 'Failed (continuing anyway)', healthError: healthError.message }));
             console.warn('[LOGIN] Health check failed after retry, but continuing with login attempt:', healthError.message);
           }
         }
@@ -168,7 +150,6 @@ export default function Login() {
       for (let attempt = 0; attempt < maxRetries; attempt++) {
         try {
           if (attempt > 0) {
-            setDebugInfo(prev => ({ ...prev, status: `Retrying login (attempt ${attempt + 1}/${maxRetries})...` }));
             await new Promise(resolve => setTimeout(resolve, 3000)); // Wait 3 seconds before retry
           }
           
@@ -176,8 +157,6 @@ export default function Login() {
           const controller = new AbortController();
           // Increased timeout for Render free tier spin-up (can take 60+ seconds on first request)
           const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
-          
-          setDebugInfo(prev => ({ ...prev, status: attempt === 0 ? 'Sending login request...' : `Retrying login request (attempt ${attempt + 1})...` }));
           
           // CRITICAL: Final runtime validation before fetch
           // This is the absolute last check before making the request
@@ -238,18 +217,15 @@ export default function Login() {
           
           clearTimeout(timeoutId);
           
-          setDebugInfo(prev => ({ ...prev, responseStatus: res.status, responseOk: res.ok }));
           console.log('[LOGIN] Response status:', res.status);
           console.log('[LOGIN] Response ok:', res.ok);
           
           if (!res.ok) {
             const errorText = await res.text();
-            setDebugInfo(prev => ({ ...prev, status: `Error: ${res.status}`, error: errorText }));
             console.error('[LOGIN] Response error:', errorText);
             throw new Error(`Server error (${res.status}): ${errorText || 'Unknown error'}`);
           }
           
-          setDebugInfo(prev => ({ ...prev, status: 'Success! Processing response...' }));
           break; // Success, exit retry loop
           
         } catch (fetchError) {
@@ -261,14 +237,6 @@ export default function Login() {
             attempt: attempt + 1,
             maxRetries: maxRetries
           };
-          
-          setDebugInfo(prev => ({ 
-            ...prev, 
-            status: attempt === maxRetries - 1 ? 'ERROR' : `Retrying... (${fetchError.message})`, 
-            error: `${fetchError.name}: ${fetchError.message}`,
-            errorDetails: JSON.stringify(errorDetails, null, 2),
-            networkError: true
-          }));
           
           console.error('[LOGIN] Fetch error details:', errorDetails);
           console.error('[LOGIN] Error type:', fetchError.name);
@@ -312,12 +280,10 @@ export default function Login() {
       console.log('[LOGIN] Saving user to localStorage:', data.data);
       // ✅ Save user in localStorage
       localStorage.setItem("user", JSON.stringify(data.data));
-      setDebugInfo(prev => ({ ...prev, status: 'Login successful! Redirecting...' }));
       setSuccess(true);
 
       // ✅ Redirect immediately using React Router (no page reload, much faster!)
       setTimeout(() => {
-        setDebugInfo(null); // Clear debug info before redirect
         navigate("/", { replace: true });
       }, 300); // Reduced from 1000ms to 300ms
     } catch (err) {
@@ -357,43 +323,6 @@ export default function Login() {
           {error && (
             <div className="mb-4 p-3 rounded-lg bg-[#16181c] border border-[#f4212e]">
               <p className="text-[#f4212e]">{error}</p>
-            </div>
-          )}
-
-          {/* Debug Info Panel - Visible on screen for mobile debugging */}
-          {debugInfo && (
-            <div className="mb-4 p-3 rounded-lg bg-[#16181c] border border-[#2f3336] text-left">
-              <div className="text-[13px] text-[#71767a] mb-2 font-bold">Debug Info:</div>
-              <div className="space-y-1 text-[12px] text-white">
-                <div><span className="text-[#71767a]">Status:</span> <span className="text-[#1d9bf0]">{debugInfo.status}</span></div>
-                <div><span className="text-[#71767a]">Hostname:</span> <span className="text-[#1d9bf0]">{debugInfo.hostname}</span></div>
-                <div><span className="text-[#71767a]">VITE_API_URL:</span> <span className={debugInfo.viteApiUrl === 'not set' ? 'text-[#f4212e]' : 'text-[#00ba7c]'}>{debugInfo.viteApiUrl || 'not set'}</span></div>
-                <div><span className="text-[#71767a]">API Base:</span> <span className={`${debugInfo.apiBase && debugInfo.apiBase.startsWith('http') ? 'text-[#00ba7c]' : 'text-[#f4212e]'} break-all`}>{debugInfo.apiBase}</span></div>
-                <div><span className="text-[#71767a]">API URL:</span> <span className={`${debugInfo.isAbsolute ? 'text-[#00ba7c]' : 'text-[#f4212e]'} break-all`}>{debugInfo.apiUrl}</span></div>
-                {debugInfo.isAbsolute === false && (
-                  <div className="mt-2 p-2 bg-[#f4212e]/20 rounded border border-[#f4212e]/50">
-                    <div className="text-[#f4212e] font-bold text-[11px]">⚠️ ERROR: API URL is not absolute!</div>
-                  </div>
-                )}
-                {debugInfo.hasDoubleSlash && (
-                  <div className="mt-2 p-2 bg-[#f4212e]/20 rounded border border-[#f4212e]/50">
-                    <div className="text-[#f4212e] font-bold text-[11px]">⚠️ ERROR: Double slash detected in URL!</div>
-                    <div className="text-[#f4212e] text-[10px] mt-1 break-all">{debugInfo.apiUrl}</div>
-                  </div>
-                )}
-                {debugInfo.healthCheck && (
-                  <div><span className="text-[#71767a]">Health:</span> <span className={debugInfo.healthCheck === 'Failed' ? 'text-[#f4212e]' : 'text-[#00ba7c]'}>{debugInfo.healthCheck}</span></div>
-                )}
-                {debugInfo.responseStatus && (
-                  <div><span className="text-[#71767a]">Response:</span> <span className={debugInfo.responseOk ? 'text-[#00ba7c]' : 'text-[#f4212e]'}>{debugInfo.responseStatus} {debugInfo.responseOk ? 'OK' : 'ERROR'}</span></div>
-                )}
-                {debugInfo.error && (
-                  <div className="mt-2 p-2 bg-black/50 rounded border border-[#f4212e]/50">
-                    <div className="text-[#f4212e] font-bold mb-1">Error:</div>
-                    <div className="text-[#f4212e] break-words">{debugInfo.error}</div>
-                  </div>
-                )}
-              </div>
             </div>
           )}
 
