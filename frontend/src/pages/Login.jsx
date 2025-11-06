@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 const BUILD_VERSION = 'v2.0.1-' + Date.now();
 console.log('[LOGIN] ============================================');
 console.log('[LOGIN] Login component loaded - Build:', BUILD_VERSION);
-console.log('[LOGIN] Expected backend URL: https://academy-project-94om.onrender.com');
+console.log('[LOGIN] Expected backend URL: https://academy-project-agmw.onrender.com');
 console.log('[LOGIN] If you see localhost or vercel.app, you have OLD cached code!');
 console.log('[LOGIN] ============================================');
 
@@ -39,7 +39,7 @@ export default function Login() {
     try {
       // DEFINITIVE BACKEND URL - HARDCODED - NEVER CHANGE THIS
       // This is the Render backend URL that serves the API
-      const BACKEND_URL = 'https://academy-project-94om.onrender.com';
+      const BACKEND_URL = 'https://academy-project-agmw.onrender.com';
       
       // ✅ IMMEDIATE VALIDATION - Log the constant value
       console.log('[LOGIN] BACKEND_URL constant value:', BACKEND_URL);
@@ -72,11 +72,11 @@ export default function Login() {
       }
       
       // CRITICAL VALIDATION - Ensure URL is using Render backend with HTTPS
-      if (!apiUrl.startsWith('https://academy-project-94om.onrender.com')) {
+      if (!apiUrl.startsWith('https://academy-project-agmw.onrender.com')) {
         console.error('[LOGIN] CRITICAL: Constructed URL is not using Render backend!', apiUrl);
         console.error('[LOGIN] BACKEND_URL constant:', BACKEND_URL);
-        console.error('[LOGIN] Expected URL to start with: https://academy-project-94om.onrender.com');
-        const errorMsg = `API URL configuration error! Got: ${apiUrl}. Expected: https://academy-project-94om.onrender.com/api/users/login. This indicates old cached code. Clear browser cache!`;
+        console.error('[LOGIN] Expected URL to start with: https://academy-project-agmw.onrender.com');
+        const errorMsg = `API URL configuration error! Got: ${apiUrl}. Expected: https://academy-project-agmw.onrender.com/api/users/login. This indicates old cached code. Clear browser cache!`;
         setError(errorMsg);
         setLoading(false);
         return;

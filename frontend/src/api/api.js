@@ -3,7 +3,7 @@
 const getApiUrl = () => {
   // DEFINITIVE BACKEND URL - NEVER CHANGE THIS - HARDCODED
   // This is the Render backend URL that serves the API
-  const BACKEND_URL = 'https://academy-project-94om.onrender.com';
+  const BACKEND_URL = 'https://academy-project-agmw.onrender.com';
   
   // CRITICAL: Validate backend URL is not empty
   if (!BACKEND_URL || typeof BACKEND_URL !== 'string' || BACKEND_URL.trim() === '') {
@@ -23,7 +23,7 @@ const getCleanApiUrl = () => {
   if (!apiBase || typeof apiBase !== 'string' || apiBase.trim() === '') {
     console.error('[API] CRITICAL: apiBase is empty after getApiUrl()!', apiBase);
     // Force fallback to hardcoded URL
-    const FALLBACK_URL = 'https://academy-project-94om.onrender.com';
+    const FALLBACK_URL = 'https://academy-project-agmw.onrender.com';
     console.error('[API] Using fallback URL:', FALLBACK_URL);
     return FALLBACK_URL;
   }

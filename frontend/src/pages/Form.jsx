@@ -8,7 +8,7 @@ import { updateAcademy } from "../api/api";
 const getApiUrl = () => {
   // DEFINITIVE BACKEND URL - NEVER CHANGE THIS
   // This is the Render backend URL that serves the API
-  const BACKEND_URL = 'https://academy-project-94om.onrender.com';
+  const BACKEND_URL = 'https://academy-project-agmw.onrender.com';
   
   // ALWAYS use production backend URL
   // Removed localhost checks to ensure consistent behavior across all deployments
