@@ -22,15 +22,32 @@ export default function Login() {
 
     setLoading(true);
     try {
-      // Smart API URL resolver: uses VITE_API_URL environment variable first,
-      // then falls back based on environment
       // DEFINITIVE BACKEND URL - HARDCODED - NEVER CHANGE THIS
       // This is the Render backend URL that serves the API
       const BACKEND_URL = 'https://academy-project-94om.onrender.com';
       
+      // CRITICAL: Check if we're using the wrong URL pattern (old cached code)
+      // If BACKEND_URL is empty or wrong, throw an error immediately
+      if (!BACKEND_URL || BACKEND_URL.includes('vercel.app')) {
+        const errorMsg = `CRITICAL: Wrong backend URL detected! Using: ${BACKEND_URL}. This indicates old cached code is running. Please hard refresh (Ctrl+Shift+R) or clear browser cache.`;
+        console.error('[LOGIN]', errorMsg);
+        setError(errorMsg);
+        setLoading(false);
+        return;
+      }
+      
       // CONSTRUCT ABSOLUTE URL DIRECTLY - NO STRING CONCATENATION THAT COULD FAIL
       // This prevents any possibility of double slashes or relative URLs
       const apiUrl = BACKEND_URL + '/api/users/login';
+      
+      // EXTRA SAFETY: Check if the constructed URL contains Vercel (old code)
+      if (apiUrl.includes('vercel.app')) {
+        const errorMsg = `CRITICAL: Detected Vercel URL in API call! URL: ${apiUrl}. This means old cached JavaScript is running. Please hard refresh (Ctrl+Shift+R) or clear browser cache.`;
+        console.error('[LOGIN]', errorMsg);
+        setError(errorMsg);
+        setLoading(false);
+        return;
+      }
       
       // CRITICAL VALIDATION - Throw error if URL is not absolute
       if (!apiUrl.startsWith('https://')) {
