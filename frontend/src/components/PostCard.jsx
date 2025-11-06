@@ -390,7 +390,7 @@ const PostCard = memo(function PostCard({ post, onPostUpdate, onPostDelete }) {
                             setCommentText(e.target.value);
                           }
                         }}
-                        placeholder="Tweet your reply"
+                        placeholder="Write your reply"
                         rows={commentText.length > 100 ? 3 : 1}
                         className="flex-1 bg-transparent border-none rounded-lg px-2 py-2 text-[15px] text-white placeholder-[#71767a] focus:outline-none resize-none leading-normal"
                       />
