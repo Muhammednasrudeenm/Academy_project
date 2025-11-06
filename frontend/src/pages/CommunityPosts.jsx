@@ -641,7 +641,7 @@ export default function CommunityPosts() {
                         {/* Action Bar - Show when expanded */}
                         {showComposeBox && (
                           <div className="flex items-center justify-between mt-3 pt-3 border-t border-[#2f3336]">
-                            <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-4 flex-shrink-0">
                               <label className="cursor-pointer flex items-center text-[#1d9bf0] hover:text-[#1a8cd8] transition-colors">
                                 <Image size={20} />
                                 <input
