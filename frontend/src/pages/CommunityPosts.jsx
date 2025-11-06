@@ -640,8 +640,8 @@ export default function CommunityPosts() {
 
                         {/* Action Bar - Show when expanded */}
                         {showComposeBox && (
-                          <div className="flex items-center justify-between mt-3 pt-3 border-t border-[#2f3336]">
-                            <div className="flex items-center gap-4 flex-shrink-0">
+                          <div className="flex items-center justify-between mt-3 pt-3 border-t border-[#2f3336] gap-2 md:gap-0">
+                            <div className="flex items-center gap-3 md:gap-4 flex-shrink-0">
                               <label className="cursor-pointer flex items-center text-[#1d9bf0] hover:text-[#1a8cd8] transition-colors">
                                 <Image size={20} />
                                 <input
@@ -673,14 +673,14 @@ export default function CommunityPosts() {
                                     setComposeCaption("");
                                   }
                                 }}
-                                className="px-4 py-2 text-[15px] font-medium leading-normal text-white hover:bg-[#181818] rounded-full transition-colors"
+                                className="px-3 md:px-4 py-2 text-[13px] md:text-[15px] font-medium leading-normal text-white hover:bg-[#181818] rounded-full transition-colors"
                               >
                                 Cancel
                               </button>
                               <button
                                 type="submit"
                                 disabled={composeLoading || (!composeCaption.trim() && !composeFile)}
-                                className="px-4 py-2 text-[15px] font-bold leading-normal bg-[#1d9bf0] hover:bg-[#1a8cd8] text-white rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed ml-auto md:ml-0"
+                                className="px-3 md:px-4 py-2 text-[13px] md:text-[15px] font-bold leading-normal bg-[#1d9bf0] hover:bg-[#1a8cd8] text-white rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                               >
                                 {composeLoading ? "Posting..." : "Post"}
                               </button>
