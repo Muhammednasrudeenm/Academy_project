@@ -28,7 +28,7 @@ export default function Login() {
       
       // CRITICAL: Check if we're using the wrong URL pattern (old cached code)
       // If BACKEND_URL is empty or wrong, throw an error immediately
-      if (!BACKEND_URL || BACKEND_URL.includes('vercel.app')) {
+      if (!BACKEND_URL || BACKEND_URL.includes('vercel.app') || BACKEND_URL.includes('localhost')) {
         const errorMsg = `CRITICAL: Wrong backend URL detected! Using: ${BACKEND_URL}. This indicates old cached code is running. Please hard refresh (Ctrl+Shift+R) or clear browser cache.`;
         console.error('[LOGIN]', errorMsg);
         setError(errorMsg);
@@ -40,20 +40,35 @@ export default function Login() {
       // This prevents any possibility of double slashes or relative URLs
       const apiUrl = BACKEND_URL + '/api/users/login';
       
-      // EXTRA SAFETY: Check if the constructed URL contains Vercel (old code)
-      if (apiUrl.includes('vercel.app')) {
-        const errorMsg = `CRITICAL: Detected Vercel URL in API call! URL: ${apiUrl}. This means old cached JavaScript is running. Please hard refresh (Ctrl+Shift+R) or clear browser cache.`;
+      // EXTRA SAFETY: Check if the constructed URL contains wrong URLs (old code)
+      if (apiUrl.includes('vercel.app') || apiUrl.includes('localhost')) {
+        const errorMsg = `CRITICAL: Detected wrong URL in API call! URL: ${apiUrl}. Expected: https://academy-project-94om.onrender.com/api/users/login. This means old cached JavaScript is running. Please hard refresh (Ctrl+Shift+R) or clear browser cache.`;
+        console.error('[LOGIN]', errorMsg);
+        console.error('[LOGIN] BACKEND_URL constant:', BACKEND_URL);
+        console.error('[LOGIN] Constructed apiUrl:', apiUrl);
+        setError(errorMsg);
+        setLoading(false);
+        return;
+      }
+      
+      // CRITICAL: Ensure URL is HTTPS, not HTTP
+      if (!apiUrl.startsWith('https://')) {
+        const errorMsg = `CRITICAL: API URL must use HTTPS! Got: ${apiUrl}. This indicates old code or configuration error.`;
         console.error('[LOGIN]', errorMsg);
         setError(errorMsg);
         setLoading(false);
         return;
       }
       
-      // CRITICAL VALIDATION - Throw error if URL is not absolute
-      if (!apiUrl.startsWith('https://')) {
-        console.error('[LOGIN] CRITICAL: Constructed URL is not absolute!', apiUrl);
-        console.error('[LOGIN] BACKEND_URL:', BACKEND_URL);
-        throw new Error(`API URL configuration error. URL must be absolute but got: ${apiUrl}`);
+      // CRITICAL VALIDATION - Throw error if URL is not absolute HTTPS
+      if (!apiUrl.startsWith('https://academy-project-94om.onrender.com')) {
+        console.error('[LOGIN] CRITICAL: Constructed URL is not using Render backend!', apiUrl);
+        console.error('[LOGIN] BACKEND_URL constant:', BACKEND_URL);
+        console.error('[LOGIN] Expected URL to start with: https://academy-project-94om.onrender.com');
+        const errorMsg = `API URL configuration error! Got: ${apiUrl}. Expected: https://academy-project-94om.onrender.com/api/users/login`;
+        setError(errorMsg);
+        setLoading(false);
+        return;
       }
       
       // Additional validation - ensure no double slashes
