@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { MoreVertical, Plus, X, Trash2, Image, Video, Smile, Edit } from "lucide-react";
+import { MoreVertical, Plus, X, Trash2, Image, Video, Edit } from "lucide-react";
 import PostCard from "../components/PostCard";
 import AcademySidebar from "../components/sidebar/AcademySidebar";
 import BottomNavigation from "../components/BottomNavigation";
@@ -661,16 +661,9 @@ export default function CommunityPosts() {
                                   onChange={handleComposeFileChange}
                                 />
                               </label>
-
-                              <button
-                                type="button"
-                                className="text-[#1d9bf0] hover:text-[#1a8cd8] transition-colors"
-                              >
-                                <Smile size={20} />
-                              </button>
                             </div>
 
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 md:gap-2 ml-auto md:ml-0">
                               <button
                                 type="button"
                                 onClick={() => {
@@ -687,7 +680,7 @@ export default function CommunityPosts() {
                               <button
                                 type="submit"
                                 disabled={composeLoading || (!composeCaption.trim() && !composeFile)}
-                                className="px-4 py-2 text-[15px] font-bold leading-normal bg-[#1d9bf0] hover:bg-[#1a8cd8] text-white rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="px-4 py-2 text-[15px] font-bold leading-normal bg-[#1d9bf0] hover:bg-[#1a8cd8] text-white rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed ml-auto md:ml-0"
                               >
                                 {composeLoading ? "Posting..." : "Post"}
                               </button>
