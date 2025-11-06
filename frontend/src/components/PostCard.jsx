@@ -248,7 +248,6 @@ const PostCard = memo(function PostCard({ post, onPostUpdate, onPostDelete }) {
                 <h3 className="font-bold text-white text-[15px] truncate leading-normal">
                   {post.user?.name || "Anonymous"}
                 </h3>
-                <span className="text-[#71767a] text-[15px] leading-normal">@{post.user?.name?.toLowerCase().replace(/\s+/g, '') || "user"}</span>
                 <span className="text-[#71767a]">·</span>
                 <span className="text-[#71767a] text-[15px] leading-normal">{formatDate(post.createdAt)}</span>
               </div>
@@ -439,7 +438,6 @@ const PostCard = memo(function PostCard({ post, onPostUpdate, onPostDelete }) {
                             <span className="text-[15px] font-bold text-white leading-normal">
                               {comment.user?.name || "Anonymous"}
                             </span>
-                            <span className="text-[15px] text-[#71767a] leading-normal">@{comment.user?.name?.toLowerCase().replace(/\s+/g, '') || "user"}</span>
                             <span className="text-[#71767a]">·</span>
                             <span className="text-[15px] text-[#71767a] leading-normal">
                               {formatDate(comment.createdAt)}
