@@ -81,10 +81,17 @@ This guide will help you delete old deployments and create fresh new ones on bot
 ### 3.4 Environment Variables
 Click **"Advanced"** → **"Add Environment Variable"** and add:
 
+**Required:**
 ```
 NODE_ENV=production
 PORT=5000
 ```
+
+**Optional (set after you get your Vercel frontend URL):**
+```
+FRONTEND_URL=https://your-vercel-project.vercel.app
+```
+> Note: FRONTEND_URL is optional. The backend CORS is configured to allow all origins, so this is mainly for reference or future use.
 
 **For Firebase (if using):**
 ```
@@ -99,6 +106,11 @@ CLOUDINARY_CLOUD_NAME=your-cloud-name
 CLOUDINARY_API_KEY=your-api-key
 CLOUDINARY_API_SECRET=your-api-secret
 ```
+
+**📝 Important Notes:**
+- Set `FRONTEND_URL` after you create your Vercel frontend (in Step 5)
+- You can add it later by going to Render Dashboard → Your Service → Environment → Add Environment Variable
+- The backend will work without it since CORS allows all origins
 
 ### 3.5 Deploy
 1. Click **"Create Web Service"**
@@ -168,6 +180,20 @@ For now, we don't need any environment variables since the backend URL is hardco
    ```
    [LOGIN] Login component loaded - Build: v2.0.1-[timestamp]
    ```
+
+### 5.7 Update Render with Frontend URL (Optional but Recommended)
+After you have your Vercel frontend URL:
+1. Go to Render Dashboard → Your Backend Service
+2. Go to **"Environment"** tab
+3. Click **"Add Environment Variable"**
+4. Add:
+   ```
+   FRONTEND_URL=https://your-vercel-project.vercel.app
+   ```
+5. Click **"Save Changes"**
+6. Service will automatically redeploy
+
+> **Why?** While not strictly required (CORS allows all origins), it's good practice to have this for reference and potential future use.
 
 ---
 
