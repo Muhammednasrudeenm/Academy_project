@@ -191,7 +191,7 @@ export default function Login() {
             throw new Error(`API URL is empty or relative: ${apiUrl}`);
           }
           
-          if (!apiUrl.startsWith('https://academy-project-94om.onrender.com')) {
+          if (!apiUrl.startsWith('https://academy-project-agmw.onrender.com')) {
             console.error('[LOGIN] CRITICAL: apiUrl is not using Render backend!', apiUrl);
             console.error('[LOGIN] Expected to start with: https://academy-project-94om.onrender.com');
             console.error('[LOGIN] Actual URL:', apiUrl);
