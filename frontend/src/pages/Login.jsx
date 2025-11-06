@@ -1,6 +1,14 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+// ✅ BUILD VERSION - This will change on each deployment to bust cache
+const BUILD_VERSION = 'v2.0.1-' + Date.now();
+console.log('[LOGIN] ============================================');
+console.log('[LOGIN] Login component loaded - Build:', BUILD_VERSION);
+console.log('[LOGIN] Expected backend URL: https://academy-project-94om.onrender.com');
+console.log('[LOGIN] If you see localhost or vercel.app, you have OLD cached code!');
+console.log('[LOGIN] ============================================');
+
 export default function Login() {
   const navigate = useNavigate();
   const [name, setName] = useState("");
@@ -21,10 +29,22 @@ export default function Login() {
     }
 
     setLoading(true);
+    
+    // ✅ IMMEDIATE CONSOLE LOG - This will show even if validation fails
+    console.log('[LOGIN] ============================================');
+    console.log('[LOGIN] Login attempt started - Build:', BUILD_VERSION);
+    console.log('[LOGIN] Current time:', new Date().toISOString());
+    console.log('[LOGIN] ============================================');
+    
     try {
       // DEFINITIVE BACKEND URL - HARDCODED - NEVER CHANGE THIS
       // This is the Render backend URL that serves the API
       const BACKEND_URL = 'https://academy-project-94om.onrender.com';
+      
+      // ✅ IMMEDIATE VALIDATION - Log the constant value
+      console.log('[LOGIN] BACKEND_URL constant value:', BACKEND_URL);
+      console.log('[LOGIN] BACKEND_URL type:', typeof BACKEND_URL);
+      console.log('[LOGIN] BACKEND_URL length:', BACKEND_URL?.length);
       
       // CRITICAL: Check if we're using the wrong URL pattern (old cached code)
       // If BACKEND_URL is empty or wrong, throw an error immediately
