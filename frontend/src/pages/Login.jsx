@@ -193,7 +193,7 @@ export default function Login() {
           
           if (!apiUrl.startsWith('https://academy-project-agmw.onrender.com')) {
             console.error('[LOGIN] CRITICAL: apiUrl is not using Render backend!', apiUrl);
-            console.error('[LOGIN] Expected to start with: https://academy-project-94om.onrender.com');
+            console.error('[LOGIN] Expected to start with: https://academy-project-agmw.onrender.com');
             console.error('[LOGIN] Actual URL:', apiUrl);
             throw new Error(`API URL is not using correct backend. Got: ${apiUrl}`);
           }
