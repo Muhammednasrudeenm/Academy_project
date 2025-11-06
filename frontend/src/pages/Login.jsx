@@ -62,7 +62,7 @@ export default function Login() {
       
       // EXTRA SAFETY: Check if the constructed URL contains wrong URLs (old code)
       if (apiUrl.includes('vercel.app') || apiUrl.includes('localhost')) {
-        const errorMsg = `CRITICAL: Detected wrong URL in API call! URL: ${apiUrl}. Expected: https://academy-project-94om.onrender.com/api/users/login. This means old cached JavaScript is running. Please hard refresh (Ctrl+Shift+R) or clear browser cache.`;
+        const errorMsg = `CRITICAL: Detected wrong URL in API call! URL: ${apiUrl}. Expected: https://academy-project-agmw.onrender.com/api/users/login. This means old cached JavaScript is running. Please hard refresh (Ctrl+Shift+R) or clear browser cache.`;
         console.error('[LOGIN]', errorMsg);
         console.error('[LOGIN] BACKEND_URL constant:', BACKEND_URL);
         console.error('[LOGIN] Constructed apiUrl:', apiUrl);
