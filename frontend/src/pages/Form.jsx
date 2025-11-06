@@ -73,6 +73,23 @@ export default function Form() {
     }
   }, [bannerFile, isEditMode]);
 
+  // Helper function to check if string contains only emojis
+  const isOnlyEmojis = (str) => {
+    // Remove all whitespace first
+    const trimmed = str.trim();
+    if (!trimmed) return false;
+    
+    // Emoji regex pattern - matches most emoji ranges
+    // This includes: Emoticons, Miscellaneous Symbols, Dingbats, Transport, Enclosed characters, etc.
+    const emojiRegex = /^[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2190}-\u{21FF}\u{2300}-\u{23FF}\u{2B00}-\u{2BFF}\u{FE00}-\u{FE0F}\u{200D}\u{20E3}\u{FE0F}\s]*$/u;
+    
+    // Remove all emoji characters and check if anything remains
+    const withoutEmojis = trimmed.replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2190}-\u{21FF}\u{2300}-\u{23FF}\u{2B00}-\u{2BFF}\u{FE00}-\u{FE0F}\u{200D}\u{20E3}\u{FE0F}\s]/gu, '');
+    
+    // If after removing emojis, nothing remains, it's only emojis
+    return withoutEmojis.length === 0 && trimmed.length > 0;
+  };
+
   const validate = () => {
     const e = {};
     
@@ -83,6 +100,8 @@ export default function Form() {
       e.name = "Academy name must be at least 3 characters.";
     } else if (name.trim().length > 50) {
       e.name = "Academy name must be less than 50 characters.";
+    } else if (isOnlyEmojis(name)) {
+      e.name = "Academy name cannot contain only emojis. Please include text.";
     }
     
     // Category Validation
