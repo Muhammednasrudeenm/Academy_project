@@ -349,13 +349,91 @@ select option:disabled {
     background-position: right 14px center !important;
     background-size: 18px !important;
     border-radius: 12px !important;
+    -webkit-tap-highlight-color: transparent !important;
+    -webkit-touch-callout: none !important;
   }
   
+  /* Aggressive mobile option styling - Twitter Style */
   select option {
+    background-color: #000000 !important;
+    background: #000000 !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
     padding: 16px 20px !important;
     font-size: 16px !important;
     min-height: 48px !important;
     line-height: 1.5 !important;
+    border: none !important;
+    margin: 0 !important;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+  }
+  
+  /* Selected option on mobile - Twitter Style */
+  select option:checked,
+  select option[selected],
+  select option:active {
+    background-color: #16181c !important;
+    background: #16181c !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    font-weight: 500 !important;
+  }
+  
+  /* Hover/focus option on mobile - Twitter Style */
+  select option:hover,
+  select option:focus {
+    background-color: #181818 !important;
+    background: #181818 !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+  }
+  
+  /* Disabled option on mobile - Twitter Style */
+  select option:disabled {
+    background-color: #000000 !important;
+    background: #000000 !important;
+    color: #71767a !important;
+    -webkit-text-fill-color: #71767a !important;
+    opacity: 0.6 !important;
+  }
+}
+
+/* iOS Safari specific fixes */
+@supports (-webkit-touch-callout: none) {
+  select {
+    -webkit-appearance: none !important;
+    appearance: none !important;
+  }
+  
+  select option {
+    background-color: #000000 !important;
+    background: #000000 !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+  }
+  
+  select option:checked,
+  select option[selected] {
+    background-color: #16181c !important;
+    background: #16181c !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+  }
+}
+
+/* Android Chrome specific fixes */
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+  select option {
+    background-color: #000000 !important;
+    background: #000000 !important;
+    color: #ffffff !important;
+  }
+  
+  select option:checked,
+  select option[selected] {
+    background-color: #16181c !important;
+    background: #16181c !important;
+    color: #ffffff !important;
   }
 }
 
