@@ -22,6 +22,7 @@ export default function CommunityPosts() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showDeleteAcademyConfirm, setShowDeleteAcademyConfirm] = useState(false);
   const [deletingAcademy, setDeletingAcademy] = useState(false);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [showPostModal, setShowPostModal] = useState(false);
   const [showJoinedAcademiesModal, setShowJoinedAcademiesModal] = useState(false);
   const [joinedAcademies, setJoinedAcademies] = useState([]);
@@ -226,6 +227,19 @@ export default function CommunityPosts() {
       showWarning("Please login to join academies");
       return;
     }
+
+    // If user is trying to exit, show confirmation first
+    if (isJoined) {
+      setShowExitConfirm(true);
+      return;
+    }
+
+    // Proceed with joining (no confirmation needed)
+    await performJoinLeave();
+  };
+
+  const performJoinLeave = async () => {
+    if (!user) return;
 
     // Optimistic update - update UI immediately
     const previousJoinedState = isJoined;
@@ -1397,6 +1411,52 @@ export default function CommunityPosts() {
       )}
 
       {/* --- DELETE ACADEMY CONFIRMATION MODAL --- Twitter Style */}
+      {/* Exit Community Confirmation Modal */}
+      {showExitConfirm && (
+        <div 
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[99999]" 
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowExitConfirm(false);
+            }
+          }}
+        >
+          <div 
+            className="relative w-full max-w-md mx-4 flex flex-col animate-fadeIn bg-black/90 backdrop-blur-xl border border-[#2f3336]/50 rounded-2xl shadow-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Background glow effect */}
+            <div className="absolute inset-0 bg-gradient-to-br from-[#1d9bf0]/10 via-transparent to-transparent opacity-50 pointer-events-none"></div>
+            
+            <div className="relative p-6 z-10">
+              <h3 className="text-[20px] font-bold text-white mb-2 leading-tight">
+                Exit community?
+              </h3>
+              <p className="text-[15px] text-[#71767a] mb-6 leading-normal">
+                You'll no longer see posts from this academy. You can join again anytime.
+              </p>
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={async () => {
+                    setShowExitConfirm(false);
+                    await performJoinLeave();
+                  }}
+                  className="w-full py-3 rounded-full bg-[#1d9bf0] text-white font-bold text-[15px] leading-normal hover:bg-[#1a8cd8] transition-colors"
+                >
+                  Exit
+                </button>
+                <button
+                  onClick={() => setShowExitConfirm(false)}
+                  className="w-full py-3 rounded-full bg-black/50 backdrop-blur-sm text-white border border-[#2f3336] font-bold text-[15px] leading-normal hover:bg-[#181818] transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showDeleteAcademyConfirm && (
         <div 
           className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[99999]" 
