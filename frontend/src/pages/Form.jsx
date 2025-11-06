@@ -176,7 +176,14 @@ export default function Form() {
         setLogoFile(null);
         setBannerFile(null);
         setErrors({});
-        setTimeout(() => navigate("/communities"), 2000);
+        // Redirect to the newly created academy's community page
+        const newAcademyId = data.data?._id || data.data?.id;
+        if (newAcademyId) {
+          setTimeout(() => navigate(`/community/${newAcademyId}`), 2000);
+        } else {
+          // Fallback to communities page if academy ID is not available
+          setTimeout(() => navigate("/communities"), 2000);
+        }
       } else {
         setErrors({
           submit: data.message || "Failed to create academy. Try again.",
