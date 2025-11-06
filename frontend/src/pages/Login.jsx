@@ -51,21 +51,12 @@ export default function Login() {
         return;
       }
       
-      // CRITICAL: Ensure URL is HTTPS, not HTTP
-      if (!apiUrl.startsWith('https://')) {
-        const errorMsg = `CRITICAL: API URL must use HTTPS! Got: ${apiUrl}. This indicates old code or configuration error.`;
-        console.error('[LOGIN]', errorMsg);
-        setError(errorMsg);
-        setLoading(false);
-        return;
-      }
-      
-      // CRITICAL VALIDATION - Throw error if URL is not absolute HTTPS
+      // CRITICAL VALIDATION - Ensure URL is using Render backend with HTTPS
       if (!apiUrl.startsWith('https://academy-project-94om.onrender.com')) {
         console.error('[LOGIN] CRITICAL: Constructed URL is not using Render backend!', apiUrl);
         console.error('[LOGIN] BACKEND_URL constant:', BACKEND_URL);
         console.error('[LOGIN] Expected URL to start with: https://academy-project-94om.onrender.com');
-        const errorMsg = `API URL configuration error! Got: ${apiUrl}. Expected: https://academy-project-94om.onrender.com/api/users/login`;
+        const errorMsg = `API URL configuration error! Got: ${apiUrl}. Expected: https://academy-project-94om.onrender.com/api/users/login. This indicates old cached code. Clear browser cache!`;
         setError(errorMsg);
         setLoading(false);
         return;
