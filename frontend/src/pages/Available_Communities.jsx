@@ -361,9 +361,9 @@ export default function Available_Communities() {
                 onChange={(e) => setSelectedCategory(e.target.value)}
                 className="relative w-full sm:w-auto min-w-[200px] border border-[#2f3336] rounded-lg px-4 py-2.5 text-[15px] bg-black text-white focus:outline-none focus:border-[#1d9bf0] focus:ring-1 focus:ring-[#1d9bf0] transition-colors min-h-[48px] cursor-pointer font-medium leading-normal"
               >
-                <option value="" style={{ backgroundColor: '#000000', color: '#71767a' }}>All Categories</option>
+                <option value="">All Categories</option>
                 {categories.map((cat) => (
-                  <option key={cat} value={cat} style={{ backgroundColor: '#000000', color: '#ffffff' }}>
+                  <option key={cat} value={cat}>
                     {cat}
                   </option>
                 ))}

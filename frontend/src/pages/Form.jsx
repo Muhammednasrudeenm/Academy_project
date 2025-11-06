@@ -302,9 +302,9 @@ export default function Form() {
                           : "border-[#2f3336] hover:border-[#71767a] focus:border-[#1d9bf0]"
                       }`}
                     >
-                      <option value="" style={{ backgroundColor: '#000000', color: '#71767a' }}>Choose a category</option>
+                      <option value="">Choose a category</option>
                       {categories.map((c) => (
-                        <option key={c} value={c} className="bg-black text-white">
+                        <option key={c} value={c}>
                           {c}
                         </option>
                       ))}
@@ -579,109 +579,6 @@ export default function Form() {
         }
         .delay-1000 {
           animation-delay: 1s;
-        }
-        /* Dropdown/Select Option Styling - Twitter Style */
-        select option {
-          background: #000000 !important;
-          color: #ffffff !important;
-          padding: 14px 18px !important;
-          font-weight: 400;
-          font-size: 15px;
-          border: none;
-          cursor: pointer;
-        }
-        select option:hover,
-        select option:focus {
-          background: #181818 !important;
-          color: #ffffff !important;
-        }
-        select option:checked,
-        select option[selected] {
-          background: #16181c !important;
-          color: #ffffff !important;
-          font-weight: 500;
-        }
-        select option:disabled {
-          color: #71767a !important;
-          background: #000000 !important;
-          cursor: not-allowed;
-        }
-        /* Styling for the select element itself */
-        select {
-          appearance: none;
-          -webkit-appearance: none;
-          -moz-appearance: none;
-          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
-          background-repeat: no-repeat;
-          background-position: right 12px center;
-          background-size: 16px;
-          padding-right: 40px !important;
-        }
-        
-        /* Mobile-specific dropdown styling */
-        @media (max-width: 640px) {
-          /* Ensure touch-friendly select elements on mobile */
-          select {
-            min-height: 48px !important; /* iOS recommended touch target */
-            font-size: 16px !important; /* Prevents zoom on iOS */
-            padding: 14px 48px 14px 16px !important;
-            background-position: right 14px center !important;
-            background-size: 18px !important;
-            border-radius: 12px !important;
-          }
-          
-          /* Better mobile dropdown options - Twitter Style */
-          select option {
-            padding: 16px 20px !important;
-            font-size: 16px !important;
-            min-height: 48px !important;
-            line-height: 1.5 !important;
-            background: #000000 !important;
-            color: #ffffff !important;
-          }
-          select option:hover,
-          select option:focus {
-            background: #181818 !important;
-          }
-          select option:checked,
-          select option[selected] {
-            background: #16181c !important;
-          }
-          
-          /* Mobile select focus states - Twitter Style */
-          select:focus {
-            border-color: #1d9bf0 !important;
-            box-shadow: 0 0 0 1px #1d9bf0 !important;
-          }
-          
-          /* Ensure dropdown menu is readable on mobile */
-          select:active,
-          select:focus {
-            background-color: #000000 !important;
-          }
-        }
-        
-        /* Tablet and medium screen optimizations */
-        @media (min-width: 641px) and (max-width: 1024px) {
-          select {
-            min-height: 44px !important;
-            padding: 12px 44px 12px 16px !important;
-          }
-          
-          select option {
-            padding: 14px 18px !important;
-            font-size: 15px !important;
-            background: #000000 !important;
-            color: #ffffff !important;
-          }
-          select option:hover,
-          select option:focus {
-            background: #181818 !important;
-          }
-          select option:checked,
-          select option[selected] {
-            background: #16181c !important;
-          }
         }
       `}</style>
     </div>
