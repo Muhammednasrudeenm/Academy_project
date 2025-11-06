@@ -14,6 +14,7 @@ export default function BottomNavigation({ onJoinedClick, onMyAcademiesClick }) 
   const [showAcademyModal, setShowAcademyModal] = useState(false);
   const lastScrollY = useRef(0);
   const scrollTimeout = useRef(null);
+  const modalRef = useRef(null);
 
   // Handle scroll to hide/show navigation
   useEffect(() => {
@@ -127,6 +128,37 @@ export default function BottomNavigation({ onJoinedClick, onMyAcademiesClick }) 
     setShowAcademyModal(true);
   };
 
+  // Close modal when clicking/touching outside
+  const handleModalBackdropClick = (e) => {
+    // Only close if clicking directly on the backdrop, not on modal content
+    if (e.target === e.currentTarget) {
+      setShowAcademyModal(false);
+    }
+  };
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (showAcademyModal) {
+      // Prevent body scroll
+      document.body.style.overflow = 'hidden';
+      // Prevent scrolling on iOS
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+    } else {
+      // Restore body scroll
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+    }
+
+    return () => {
+      // Cleanup on unmount
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+    };
+  }, [showAcademyModal]);
+
   const handleOptionClick = (option) => {
     setShowAcademyModal(false);
     switch (option) {
@@ -206,14 +238,26 @@ export default function BottomNavigation({ onJoinedClick, onMyAcademiesClick }) 
     {/* Academy Options Modal */}
     {showAcademyModal && (
         <div 
-          className="fixed inset-0 bg-gradient-to-b from-black/60 via-black/50 to-black/60 flex items-end justify-center z-[10000] p-0 animate-fadeIn"
-          onClick={() => setShowAcademyModal(false)}
-          style={{ willChange: 'opacity', transform: 'translateZ(0)' }}
+          ref={modalRef}
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-end justify-center z-[10000] p-0 animate-fadeIn touch-none"
+          onClick={handleModalBackdropClick}
+          onTouchStart={handleModalBackdropClick}
+          style={{ 
+            willChange: 'opacity', 
+            transform: 'translateZ(0)',
+            overscrollBehavior: 'contain',
+            WebkitOverflowScrolling: 'touch'
+          }}
         >
           <div 
-            className="relative w-full max-w-md max-h-[60vh] flex flex-col animate-slideUp rounded-t-2xl overflow-hidden bg-black border-t border-x border-[#2f3336]"
+            className="relative w-full max-w-md max-h-[60vh] flex flex-col animate-slideUp rounded-t-2xl overflow-hidden bg-black border-t border-x border-[#2f3336] touch-auto"
             onClick={(e) => e.stopPropagation()}
-            style={{ willChange: 'transform', transform: 'translateZ(0)' }}
+            onTouchStart={(e) => e.stopPropagation()}
+            style={{ 
+              willChange: 'transform', 
+              transform: 'translateZ(0)',
+              overscrollBehavior: 'contain'
+            }}
           >
             {/* Header */}
             <div className="relative flex items-center justify-between p-4 border-b border-[#2f3336] sticky top-0 z-10 bg-black">
@@ -233,7 +277,10 @@ export default function BottomNavigation({ onJoinedClick, onMyAcademiesClick }) 
             </div>
 
             {/* Options List */}
-            <div className="relative overflow-y-auto p-2 space-y-1 z-10">
+            <div 
+              className="relative overflow-y-auto p-2 space-y-1 z-10 overscroll-contain"
+              style={{ overscrollBehavior: 'contain' }}
+            >
               {/* Joined Academies */}
               <button
                 onClick={() => handleOptionClick("joined")}
