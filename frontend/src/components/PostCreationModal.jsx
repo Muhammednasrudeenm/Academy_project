@@ -84,22 +84,22 @@ export default function PostCreationModal({ academyId, onClose, onSubmit }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-0 md:p-4">
       {/* --- Modal Container --- */}
       <div
         className="
-          bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-lg
-          mx-3 sm:mx-auto relative flex flex-col
+          bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full h-full md:h-auto md:max-w-lg
+          md:mx-auto relative flex flex-col
           transition-all duration-300
-          sm:translate-y-0 sm:rounded-2xl
-          animate-slideUp sm:animate-fadeIn
+          md:rounded-2xl
+          animate-slideUp md:animate-fadeIn
         "
         style={{
-          maxHeight: "90vh",
+          maxHeight: "100vh",
         }}
       >
         {/* --- Header --- */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
           <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
             Create Post
           </h2>
@@ -114,7 +114,7 @@ export default function PostCreationModal({ academyId, onClose, onSubmit }) {
         {/* --- Body --- */}
         <form
           onSubmit={handleSubmit}
-          className="flex-1 flex flex-col px-4 py-3 overflow-y-auto space-y-3"
+          className="flex-1 flex flex-col px-4 py-3 overflow-y-auto space-y-3 min-h-0"
         >
           <input
             type="text"
@@ -166,8 +166,8 @@ export default function PostCreationModal({ academyId, onClose, onSubmit }) {
           )}
 
           {/* --- Action Bar --- */}
-          <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-700">
-            <div className="flex items-center gap-4">
+          <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-700 flex-shrink-0 gap-2 md:gap-0">
+            <div className="flex items-center gap-3 md:gap-4 flex-shrink-0">
               <label className="cursor-pointer flex items-center gap-2 text-gray-400 hover:text-sky-400 transition">
                 <Image size={20} />
                 <input
@@ -193,9 +193,10 @@ export default function PostCreationModal({ academyId, onClose, onSubmit }) {
               type="submit"
               disabled={loading}
               className="
-                flex items-center gap-2 bg-sky-500 hover:bg-sky-600
-                text-white px-6 py-2 rounded-full font-medium
+                flex items-center justify-center gap-2 bg-sky-500 hover:bg-sky-600
+                text-white px-4 md:px-6 py-2 rounded-full font-medium text-sm md:text-base
                 transition duration-200 active:scale-95 disabled:opacity-50
+                flex-shrink-0 min-w-[80px] md:min-w-0
               "
             >
               {loading ? "Posting..." : "Post"}
