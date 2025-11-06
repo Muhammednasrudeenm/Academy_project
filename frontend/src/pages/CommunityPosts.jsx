@@ -1096,11 +1096,48 @@ export default function CommunityPosts() {
                               </span>
                             )}
                           </div>
-                          {member.joinedAt && (
-                            <p className="text-[13px] text-[#71767a] leading-normal mt-0.5">
-                              Joined {new Date(member.joinedAt).toLocaleDateString()}
-                            </p>
-                          )}
+                          {(() => {
+                            // Try to get joinedAt from various possible locations
+                            const joinedDate = member.joinedAt || member.joinDate || member.createdAt;
+                            
+                            if (joinedDate) {
+                              try {
+                                const date = new Date(joinedDate);
+                                // Check if date is valid
+                                if (!isNaN(date.getTime())) {
+                                  const now = new Date();
+                                  const diff = now - date;
+                                  const days = Math.floor(diff / 86400000);
+                                  const months = Math.floor(days / 30);
+                                  const years = Math.floor(days / 365);
+                                  
+                                  let dateText;
+                                  if (days < 1) {
+                                    dateText = 'today';
+                                  } else if (days < 7) {
+                                    dateText = `${days} ${days === 1 ? 'day' : 'days'} ago`;
+                                  } else if (months < 1) {
+                                    const weeks = Math.floor(days / 7);
+                                    dateText = `${weeks} ${weeks === 1 ? 'week' : 'weeks'} ago`;
+                                  } else if (years < 1) {
+                                    dateText = `${months} ${months === 1 ? 'month' : 'months'} ago`;
+                                  } else {
+                                    dateText = `${years} ${years === 1 ? 'year' : 'years'} ago`;
+                                  }
+                                  
+                                  return (
+                                    <p className="text-[13px] text-[#71767a] leading-normal mt-0.5">
+                                      Joined {dateText}
+                                    </p>
+                                  );
+                                }
+                              } catch (e) {
+                                // Invalid date, don't show anything
+                                return null;
+                              }
+                            }
+                            return null;
+                          })()}
                         </div>
                       </div>
                     );
